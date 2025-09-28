@@ -7,3 +7,10 @@
   </PropertyGroup>
 
 </Project>
+<!--
+ Optional: If you want to keep local /lib assets managed by LibMan, uncomment this target
+ and ensure LibMan CLI is available on the build agent.
+ <Target Name="LibManRestore" BeforeTargets="Build">
+   <Exec Command="libman restore" />
+ </Target>
+-->
