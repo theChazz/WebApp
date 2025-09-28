@@ -2,8 +2,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddAuthentication("Identity.Application")
-    .AddCookie("Identity.Application", options =>
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
     {
         options.Cookie.HttpOnly = true;
         options.LoginPath = "/Login";
