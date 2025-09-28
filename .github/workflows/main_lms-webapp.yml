@@ -24,16 +24,18 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore client-side libraries (LibMan)
+        shell: pwsh
+        working-directory: WebApp
         run: |
           dotnet tool update -g Microsoft.Web.LibraryManager.Cli
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
           libman restore
-        working-directory: WebApp/WebApp
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish WebApp/WebApp/WebApp.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish WebApp/WebApp.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
