@@ -2,13 +2,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
-    {
-        options.Cookie.HttpOnly = true;
-        options.LoginPath = "/Login";
-        options.AccessDeniedPath = "/Login";
-    });
+// builder.Services.AddAuthentication("Cookies")
+//     .AddCookie("Cookies", options =>
+//     {
+//         options.Cookie.HttpOnly = true;
+//         options.LoginPath = "/Login";
+//         options.AccessDeniedPath = "/Login";
+//     });
 
 var app = builder.Build();
 
@@ -25,8 +25,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseAuthentication();
+// app.UseAuthorization();
 
 app.MapRazorPages();
 
