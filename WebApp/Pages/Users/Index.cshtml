@@ -94,7 +94,7 @@
                     <label class="form-label">Role</label>
                     <select class="form-select" id="roleFilter">
                         <option value="">All Roles</option>
-                        <option value="Admin">Admin</option>
+                        <option value="Administrator">Administrator</option>
                         <option value="Lecturer">Lecturer</option>
                         <option value="Student">Student</option>
                     </select>
@@ -190,7 +190,7 @@
             document.getElementById('activeUsers').textContent = activeCount;
 
             // Roles count
-            const roles = [...new Set(users.map(u => u.userRole?.name).filter(Boolean))];
+            const roles = [...new Set(users.map(u => u.role).filter(Boolean))];
             document.getElementById('rolesCount').textContent = roles.length;
 
             // Inactive users
@@ -215,7 +215,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <h5 class="card-title">${escapeHtml(user.fullName)}</h5>
-                                    <span class="badge bg-primary">${escapeHtml(user.userRole?.name || 'No Role')}</span>
+                                    <span class="badge bg-primary">${escapeHtml(user.role || 'No Role')}</span>
                                 </div>
                                 <span class="badge ${user.accountStatus === 'Active' ? 'bg-success' : 'bg-secondary'}">
                                     ${user.accountStatus || 'Unknown'}
@@ -273,7 +273,7 @@
                         <small class="text-muted">${escapeHtml(user.email)}</small>
                     </td>
                     <td>
-                        <span class="badge bg-secondary">${escapeHtml(user.userRole?.name || 'No Role')}</span>
+                        <span class="badge bg-secondary">${escapeHtml(user.role || 'No Role')}</span>
                     </td>
                     <td>
                         <span class="badge ${user.accountStatus === 'Active' ? 'bg-success' : 'bg-secondary'}">
@@ -311,7 +311,7 @@
             filteredUsers = allUsers.filter(user => {
                 const matchesSearch = user.fullName?.toLowerCase().includes(searchTerm) ||
                                     user.email?.toLowerCase().includes(searchTerm);
-                const matchesRole = !roleFilter || user.userRole?.name === roleFilter;
+                const matchesRole = !roleFilter || user.role === roleFilter;
                 const matchesStatus = !statusFilter || user.accountStatus === statusFilter;
 
                 return matchesSearch && matchesRole && matchesStatus;

@@ -25,10 +25,7 @@
                         <div class="mb-3">
                             <label for="role" class="form-label">Role</label>
                             <select class="form-select" id="role" name="role">
-                                <option value="Admin">Admin</option>
-                                <option value="Lecturer">Lecturer</option>
-                                <option value="Learner">Learner</option>
-                                <option value="Support Staff">Support Staff</option>
+                                <!-- Role options will be populated dynamically -->
                             </select>
                         </div>
                         
@@ -72,8 +69,42 @@
         const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
         const userId = '@Model.Id';
         
+        async function loadRoles() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/UserRole`);
+                if (!response.ok) throw new Error('Failed to fetch roles');
+
+                const roles = await response.json();
+                const roleSelect = document.getElementById('role');
+                
+                // Clear existing options
+                roleSelect.innerHTML = '';
+                
+                // Add role options - prefer Code over Name for the value
+                roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.code || role.name; // Use code if available, otherwise name
+                    option.textContent = role.name; // Display name
+                    roleSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading roles:', error);
+                // Fallback to basic roles if API fails
+                const roleSelect = document.getElementById('role');
+                roleSelect.innerHTML = `
+                    <option value="Admin">Admin</option>
+                    <option value="Lecturer">Lecturer</option>
+                    <option value="Learner">Learner</option>
+                    <option value="Support Staff">Support Staff</option>
+                `;
+            }
+        }
+        
         async function loadUserDetails() {
             try {
+                // Load roles first
+                await loadRoles();
+                
                 const response = await fetch(`${apiBaseUrl}/api/User/${userId}`);
                 if (!response.ok) throw new Error('Failed to fetch user details');
                 
@@ -81,7 +112,11 @@
                 document.getElementById('userId').value = user.id;
                 document.getElementById('fullName').value = user.fullName;
                 document.getElementById('email').value = user.email;
-                document.getElementById('role').value = user.role;
+                
+                // Set role value - prefer code if available, otherwise name
+                const roleValue = user.userRole?.code || user.userRole?.name || user.role;
+                document.getElementById('role').value = roleValue;
+                
                 document.getElementById('accountStatus').value = user.accountStatus || 'Active';
                 document.getElementById('createdAt').value = user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A';
                 document.getElementById('updatedAt').value = user.updatedAt ? new Date(user.updatedAt).toLocaleString() : 'N/A';
