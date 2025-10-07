@@ -20,11 +20,11 @@
     <div class="card">
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-3 fw-bold">User ID:</div>
+                <div class="col-md-3 fw-bold">User:</div>
                 <div class="col-md-9" id="userIdDisplay"></div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-3 fw-bold">Program ID:</div>
+                <div class="col-md-3 fw-bold">Program:</div>
                 <div class="col-md-9" id="programIdDisplay"></div>
             </div>
             <div class="row mb-3">
@@ -55,8 +55,8 @@
                 if (!response.ok) throw new Error('Failed to load enrollment details');
                 
                 const enrollment = await response.json();
-                document.getElementById('userIdDisplay').textContent = enrollment.userId || 'N/A';
-                document.getElementById('programIdDisplay').textContent = enrollment.programId || 'N/A';
+                document.getElementById('userIdDisplay').textContent = enrollment.user?.fullName || 'N/A';
+                document.getElementById('programIdDisplay').textContent = enrollment.program?.name || 'N/A';
                 document.getElementById('statusDisplay').textContent = enrollment.status || 'N/A';
                 document.getElementById('enrolledAtDisplay').textContent = enrollment.enrolledAt ? new Date(enrollment.enrolledAt).toLocaleString() : 'N/A';
                 document.getElementById('expectedCompletionDateDisplay').textContent = enrollment.expectedCompletionDate ? new Date(enrollment.expectedCompletionDate).toLocaleString() : 'N/A';

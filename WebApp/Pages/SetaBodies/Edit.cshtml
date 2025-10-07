@@ -1,0 +1,54 @@
+@page "{id:int}"
+@model WebApp.Pages.SetaBodies.EditModel
+@{
+    ViewData["Title"] = "Edit SETA Body";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-edit"></i> Edit SETA Body</h4>
+                    <a href="/SetaBodies/Index" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+                </div>
+                <div class="card-body">
+                    <form id="form">
+                        <div class="mb-3">
+                            <label class="form-label">Code</label>
+                            <input id="Code" class="form-control" maxlength="10" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input id="Name" class="form-control" required />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Save</button>
+                            <a href="/SetaBodies/Index" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                    <div id="alert" class="alert mt-3" style="display:none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const id='@Model.Id';
+        async function load(){
+            try{ const res=await fetch(`${apiBaseUrl}/api/SetaBody/${id}`); if(!res.ok){ let msg='Failed to load'; try{ const e=await res.json(); msg=e.message||e.title||msg;}catch{} throw new Error(msg);} const d=await res.json(); document.getElementById('Code').value=(d.code ?? d.Code) || ''; document.getElementById('Name').value=(d.name ?? d.Name) || ''; }
+            catch(err){ showAlert(err.message||'Error','danger'); }
+        }
+        document.getElementById('form').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const payload={ code: document.getElementById('Code').value.trim(), name: document.getElementById('Name').value.trim() };
+            try{ const res=await fetch(`${apiBaseUrl}/api/SetaBody/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); if(!res.ok){ let msg='Failed to save'; try{ const e=await res.json(); msg=e.message||e.title||msg;}catch{} throw new Error(msg);} showAlert('Saved successfully','success'); setTimeout(()=>window.location.href='/SetaBodies/Index',700); }
+            catch(err){ showAlert(err.message||'Error saving','danger'); }
+        });
+        function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; if(t==='success'||t==='info') setTimeout(()=>a.style.display='none',5000); }
+        document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

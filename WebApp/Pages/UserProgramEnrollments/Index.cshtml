@@ -135,7 +135,12 @@
                 <table class="table">
                     <thead class="table-dark">
                         <tr>
-                            <th>Program</th>
+                            <th style="width: 18%">Program</th>
+                            <th style="width: 25%">User</th>
+                            <th style="width: 20%">Email</th>
+                            <th style="width: 10%">Status</th>
+                            <th style="width: 22%">Enrollment Dates</th>
+                            <th style="width: 5%">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="enrollmentsTableBody">
@@ -315,7 +320,7 @@
                 // Main program row
                 let programHtml = `
                     <tr class="table-primary program-header-row" onclick="toggleProgramEnrollments('${programRowId}')">
-                        <td>
+                        <td colspan="6">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-graduation-cap text-primary me-2"></i>
                                 <strong>${escapeHtml(program.name)}</strong>
@@ -326,61 +331,53 @@
                     </tr>
 
                     <tr class="table-secondary program-subheader-row ${programRowId}" style="display: none;">
-                        <td>
-                            <div class="row">
-                                <div class="col-md-3"><strong>User</strong></div>
-                                <div class="col-md-2"><strong>Email</strong></div>
-                                <div class="col-md-2"><strong>Status</strong></div>
-                                <div class="col-md-3"><strong>Enrollment Dates</strong></div>
-                                <div class="col-md-2"><strong>Actions</strong></div>
-                            </div>
-                        </td>
+                        <td></td>
+                        <td><strong>User</strong></td>
+                        <td><strong>Email</strong></td>
+                        <td><strong>Status</strong></td>
+                        <td><strong>Enrollment Dates</strong></td>
+                        <td><strong>Actions</strong></td>
                     </tr>`;
 
                 // Enrollment rows (initially hidden)
                 const enrollmentRows = enrollments.map(enrollment => `
                     <tr class="program-enrollment-row ${programRowId}" style="display: none;">
+                        <td></td>
                         <td>
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-user text-muted me-2"></i>
-                                        ${escapeHtml(enrollment.user?.fullName || 'No User')}
-                                    </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user text-muted me-2"></i>
+                                ${escapeHtml(enrollment.user?.fullName || 'No User')}
+                            </div>
+                        </td>
+                        <td><small class="text-muted">${escapeHtml(enrollment.user?.email || 'No Email')}</small></td>
+                        <td>
+                            <span class="badge ${enrollment.status === 'Active' ? 'bg-success' : 'bg-secondary'}">
+                                ${escapeHtml(enrollment.status)}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Enrolled:</small><br>
+                                    <small class="fw-bold">${enrollment.enrolledAt ? new Date(enrollment.enrolledAt).toLocaleDateString() : 'N/A'}</small>
                                 </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">${escapeHtml(enrollment.user?.email || 'No Email')}</small>
+                                <div class="col-6">
+                                    <small class="text-muted">Expected:</small><br>
+                                    <small class="fw-bold">${enrollment.expectedCompletionDate ? new Date(enrollment.expectedCompletionDate).toLocaleDateString() : 'N/A'}</small>
                                 </div>
-                                <div class="col-md-2">
-                                    <span class="badge ${enrollment.status === 'Active' ? 'bg-success' : 'bg-secondary'}">
-                                        ${escapeHtml(enrollment.status)}
-                                    </span>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Enrolled:</small><br>
-                                            <small class="fw-bold">${enrollment.enrolledAt ? new Date(enrollment.enrolledAt).toLocaleDateString() : 'N/A'}</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Expected:</small><br>
-                                            <small class="fw-bold">${enrollment.expectedCompletionDate ? new Date(enrollment.expectedCompletionDate).toLocaleDateString() : 'N/A'}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-1">
-                                    <div class="btn-group" role="group">
-                                        <a href="/UserProgramEnrollments/Details/${enrollment.id}" class="btn btn-info btn-sm" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="/UserProgramEnrollments/Edit/${enrollment.id}" class="btn btn-primary btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteEnrollment(${enrollment.id})" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/UserProgramEnrollments/Details/${enrollment.id}" class="btn btn-info btn-sm" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/UserProgramEnrollments/Edit/${enrollment.id}" class="btn btn-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-danger btn-sm" onclick="deleteEnrollment(${enrollment.id})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>`).join('');

@@ -14,15 +14,17 @@
                 <div class="card-body">
                     <form id="editUserProgramEnrollmentForm">
                         <input type="hidden" id="id" name="id" />
+                        <input type="hidden" id="userId" name="userId" />
+                        <input type="hidden" id="programId" name="programId" />
 
                         <div class="mb-3">
-                            <label for="userId" class="form-label">User ID</label>
-                            <input type="number" class="form-control" id="userId" name="userId" required>
+                            <label class="form-label">User</label>
+                            <input type="text" class="form-control" id="userNameDisplay" readonly>
                         </div>
 
                         <div class="mb-3">
-                            <label for="programId" class="form-label">Program ID</label>
-                            <input type="number" class="form-control" id="programId" name="programId" required>
+                            <label class="form-label">Program</label>
+                            <input type="text" class="form-control" id="programNameDisplay" readonly>
                         </div>
 
                         <div class="mb-3">
@@ -37,7 +39,7 @@
 
                         <div class="mb-3">
                             <label for="enrolledAt" class="form-label">Enrolled At</label>
-                            <input type="datetime-local" class="form-control" id="enrolledAt" name="enrolledAt" required>
+                            <input type="datetime-local" class="form-control" id="enrolledAt" name="enrolledAt" readonly>
                         </div>
 
                         <div class="mb-3">
@@ -88,6 +90,8 @@
                 document.getElementById('id').value = enrollment.id;
                 document.getElementById('userId').value = enrollment.userId || '';
                 document.getElementById('programId').value = enrollment.programId || '';
+                document.getElementById('userNameDisplay').value = enrollment.userName || enrollment.user?.fullName || '';
+                document.getElementById('programNameDisplay').value = enrollment.programName || enrollment.program?.name || '';
                 document.getElementById('status').value = enrollment.status || 'Active'; // Default to 'Active' if null/empty
                 document.getElementById('enrolledAt').value = formatLocalDateTime(enrollment.enrolledAt);
                 document.getElementById('expectedCompletionDate').value = formatLocalDateTime(enrollment.expectedCompletionDate);
@@ -104,17 +108,14 @@
             const enrolledAtValue = document.getElementById('enrolledAt').value;
             const expectedCompletionDateValue = document.getElementById('expectedCompletionDate').value;
 
+            // Backend Update DTO accepts only Status and ExpectedCompletionDate
             const enrollmentData = {
-                id: document.getElementById('id').value,
-                userId: document.getElementById('userId').value,
-                programId: document.getElementById('programId').value,
                 status: document.getElementById('status').value,
-                enrolledAt: enrolledAtValue ? new Date(enrolledAtValue).toISOString() : null,
                 expectedCompletionDate: expectedCompletionDateValue ? new Date(expectedCompletionDateValue).toISOString() : null
             };
 
             try {
-                const response = await fetch(`${apiBaseUrl}/api/UserProgramEnrollment/${enrollmentData.id}`, {
+                const response = await fetch(`${apiBaseUrl}/api/UserProgramEnrollment/${document.getElementById('id').value}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'

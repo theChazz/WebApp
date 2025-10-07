@@ -1,0 +1,38 @@
+@page "{id:int}"
+@model WebApp.Pages.Questions.EditModel
+@{
+    ViewData["Title"] = "Edit Question";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header"><h4><i class="fas fa-edit"></i> Edit Question</h4></div>
+                <div class="card-body">
+                    <form id="editQuestionForm">
+                        <div class="mb-3"><label class="form-label">Text</label><textarea id="Text" class="form-control" required></textarea></div>
+                        <div class="mb-3"><label class="form-label">Type</label><input id="Type" class="form-control" /></div>
+                        <div class="mb-3"><label class="form-label">Max Marks</label><input id="MaxMarks" type="number" class="form-control" /></div>
+                        <button class="btn btn-primary">Save</button>
+                        <a href="/Questions/Index" class="btn btn-secondary ms-2">Cancel</a>
+                    </form>
+                    <div id="alert" class="alert mt-3" style="display:none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const id = '@Model.Id';
+        async function load() { try { const res = await fetch(`${apiBaseUrl}/api/Question/${id}`); if (!res.ok) throw new Error('Failed to load'); const d = await res.json(); document.getElementById('Text').value = d.text || ''; document.getElementById('Type').value = d.questionType || ''; document.getElementById('MaxMarks').value = d.maxMarks || ''; } catch (err) { showAlert(err.message || 'Error', 'danger'); } }
+
+        document.getElementById('editQuestionForm').addEventListener('submit', async (e) => { e.preventDefault(); const payload = { id: parseInt(id,10), text: document.getElementById('Text').value.trim(), questionType: document.getElementById('Type').value.trim(), maxMarks: parseFloat(document.getElementById('MaxMarks').value) || 0 }; try { const res = await fetch(`${apiBaseUrl}/api/Question/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error('Failed to save'); showAlert('Saved', 'success'); setTimeout(() => window.location.href = '/Questions/Index', 700); } catch (err) { showAlert(err.message || 'Error saving', 'danger'); } });
+
+        function showAlert(message, type) { const alert = document.getElementById('alert'); alert.className = `alert alert-${type} mt-3`; alert.textContent = message; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 4000); }
+        document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

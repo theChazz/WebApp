@@ -1,0 +1,741 @@
+@page
+@model WebApp.Pages.Submissions.CreateModel
+@{
+    ViewData["Title"] = "Create Submission";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-plus text-primary me-2"></i>
+                        Create New Submission
+                    </h2>
+                    <p class="text-muted mb-0">Submit work for an assessment</p>
+                </div>
+                <a href="/Submissions" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Submissions
+                </a>
+            </div>
+
+            <form id="submissionForm" enctype="multipart/form-data">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Submission Details
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Student</label>
+                                <select class="form-select" asp-for="Input.StudentId" id="studentSelect" required>
+                                    <option value="">Select a student...</option>
+                                </select>
+                                <span asp-validation-for="Input.StudentId" class="text-danger"></span>
+                                <div class="form-text">Choose the student submitting this work</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Assessment</label>
+                                <select class="form-select" asp-for="Input.AssessmentId" id="assessmentSelect" required>
+                                    <option value="">Select an assessment...</option>
+                                </select>
+                                <span asp-validation-for="Input.AssessmentId" class="text-danger"></span>
+                                <div class="form-text">Choose the assessment being submitted for</div>
+                            </div>
+                        </div>
+
+                        <!-- Assessment Details (populated when assessment is selected) -->
+                        <div id="assessmentDetails" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2">
+                                        <h6 class="alert-heading mb-1">Assessment Information</h6>
+                                        <div id="assessmentInfo">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-12">
+                                <label class="form-label">Submission Text</label>
+                                <textarea class="form-control" asp-for="Input.SubmissionText" rows="8" 
+                                         placeholder="Enter your submission text here..."></textarea>
+                                <span asp-validation-for="Input.SubmissionText" class="text-danger"></span>
+                                <div class="form-text">Written content of the submission</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-paperclip me-2"></i>
+                            File Attachments
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Upload Files</label>
+                            <input type="file" class="form-control" asp-for="Input.Files" multiple 
+                                   accept=".pdf,.doc,.docx,.txt,.zip,.jpg,.jpeg,.png,.gif">
+                            <div class="form-text">
+                                Supported formats: PDF, Word documents, text files, images, and ZIP archives. 
+                                Maximum file size: 10MB per file.
+                            </div>
+                        </div>
+
+                        <!-- File Preview Area -->
+                        <div id="filePreview" class="mt-3" style="display: none;">
+                            <h6 class="fw-semibold mb-2">Selected Files:</h6>
+                            <div id="fileList" class="list-group">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-cog me-2"></i>
+                            Submission Options
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" asp-for="Input.SubmissionStatus" id="statusSelect">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Submitted">Submitted</option>
+                                </select>
+                                <div class="form-text">Draft submissions can be edited later</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="Input.SubmitImmediately" id="submitImmediately">
+                                        <label class="form-check-label" for="submitImmediately">
+                                            Submit Immediately
+                                        </label>
+                                        <div class="form-text">Automatically submit after saving</div>
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" asp-for="Input.AllowLateSubmission" id="allowLate">
+                                        <label class="form-check-label" for="allowLate">
+                                            Allow Late Submission
+                                        </label>
+                                        <div class="form-text">Submit even if past due date</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" asp-for="Input.Notes" rows="3" 
+                                     placeholder="Additional notes or comments..."></textarea>
+                            <div class="form-text">Optional notes for instructors or personal reference</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save me-1"></i>
+                        <span id="saveBtnText">Save Submission</span>
+                    </button>
+                    <button type="button" class="btn btn-success" id="saveAndSubmitBtn" style="display: none;">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Save & Submit
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Submissions'">
+                        <i class="fas fa-times me-1"></i>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Student Information Panel -->
+            <div class="card" id="studentInfoPanel" style="display: none;">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Student Information
+                    </h6>
+                </div>
+                <div class="card-body" id="studentInfo">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Submission Guidelines -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Submission Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Review assessment requirements carefully
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Include all required files and content
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Save as draft for later editing if needed
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Submit before the due date
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Contact instructor for questions
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- File Type Guide -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file me-2"></i>
+                        Supported File Types
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 text-sm">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                <span>PDF</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-file-word text-primary me-2"></i>
+                                <span>Word</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-alt text-secondary me-2"></i>
+                                <span>Text</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-file-image text-success me-2"></i>
+                                <span>Images</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-file-archive text-warning me-2"></i>
+                                <span>ZIP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        class SubmissionCreator {
+            constructor() {
+                this.apiBaseUrl = '@Model.ApiBaseUrl';
+                this.students = [];
+                this.assessments = [];
+                this.selectedAssessment = null;
+                this.selectedStudent = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadDropdownData();
+                this.setupFilePreview();
+                this.initializeFromQueryParams();
+            }
+
+            bindEvents() {
+                // Student selection
+                document.getElementById('studentSelect').addEventListener('change', (e) => {
+                    this.onStudentSelected(e.target.value);
+                });
+
+                // Assessment selection
+                document.getElementById('assessmentSelect').addEventListener('change', (e) => {
+                    this.onAssessmentSelected(e.target.value);
+                });
+
+                // Status change
+                document.getElementById('statusSelect').addEventListener('change', (e) => {
+                    this.updateSubmitButton(e.target.value);
+                });
+
+                // Submit immediately checkbox
+                document.getElementById('submitImmediately').addEventListener('change', (e) => {
+                    this.updateSubmitButton();
+                });
+
+                // Form submission
+                document.getElementById('submissionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSubmission(false);
+                });
+
+                // Save and submit button
+                document.getElementById('saveAndSubmitBtn').addEventListener('click', () => {
+                    this.saveSubmission(true);
+                });
+
+                // File input change
+                document.querySelector('input[type="file"]').addEventListener('change', (e) => {
+                    this.previewFiles(e.target.files);
+                });
+            }
+
+            async loadDropdownData() {
+                try {
+                    // Load students
+                    const studentsResponse = await apiUtils.get(`${this.apiBaseUrl}/api/Users?role=Student&pageSize=1000`);
+                    if (studentsResponse.ok) {
+                        const studentsData = await studentsResponse.json();
+                        this.students = studentsData.items || [];
+                        this.populateStudentDropdown();
+                    }
+
+                    // Load assessments
+                    const assessmentsResponse = await apiUtils.get(`${this.apiBaseUrl}/api/Assessments?pageSize=1000`);
+                    if (assessmentsResponse.ok) {
+                        const assessmentsData = await assessmentsResponse.json();
+                        this.assessments = assessmentsData.items || [];
+                        this.populateAssessmentDropdown();
+                    }
+                } catch (error) {
+                    console.error('Error loading dropdown data:', error);
+                    this.showError('Failed to load form data');
+                }
+            }
+
+            populateStudentDropdown() {
+                const select = document.getElementById('studentSelect');
+                const currentValue = select.value;
+                
+                // Clear existing options except the first one
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                this.students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.firstName} ${student.lastName} (${student.email})`;
+                    select.appendChild(option);
+                });
+
+                // Restore selection if it was set
+                if (currentValue) {
+                    select.value = currentValue;
+                    this.onStudentSelected(currentValue);
+                }
+            }
+
+            populateAssessmentDropdown() {
+                const select = document.getElementById('assessmentSelect');
+                const currentValue = select.value;
+                
+                // Clear existing options except the first one
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                this.assessments.forEach(assessment => {
+                    const option = document.createElement('option');
+                    option.value = assessment.id;
+                    option.textContent = `${assessment.title} (${assessment.course?.title})`;
+                    select.appendChild(option);
+                });
+
+                // Restore selection if it was set
+                if (currentValue) {
+                    select.value = currentValue;
+                    this.onAssessmentSelected(currentValue);
+                }
+            }
+
+            onStudentSelected(studentId) {
+                if (!studentId) {
+                    document.getElementById('studentInfoPanel').style.display = 'none';
+                    this.selectedStudent = null;
+                    return;
+                }
+
+                this.selectedStudent = this.students.find(s => s.id == studentId);
+                if (this.selectedStudent) {
+                    this.displayStudentInfo(this.selectedStudent);
+                }
+            }
+
+            displayStudentInfo(student) {
+                const panel = document.getElementById('studentInfoPanel');
+                const infoDiv = document.getElementById('studentInfo');
+                
+                infoDiv.innerHTML = `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar avatar-lg bg-primary text-white rounded-circle me-3">
+                            ${student.firstName.charAt(0)}${student.lastName.charAt(0)}
+                        </div>
+                        <div>
+                            <h6 class="mb-1">${student.firstName} ${student.lastName}</h6>
+                            <small class="text-muted">${student.email}</small>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Student ID:</small>
+                        <div class="fw-semibold">${student.id}</div>
+                    </div>
+                    ${student.program ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Program:</small>
+                            <div class="fw-semibold">${student.program}</div>
+                        </div>
+                    ` : ''}
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile(${student.id})">
+                            <i class="fas fa-user me-1"></i>
+                            View Profile
+                        </button>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            onAssessmentSelected(assessmentId) {
+                if (!assessmentId) {
+                    document.getElementById('assessmentDetails').style.display = 'none';
+                    this.selectedAssessment = null;
+                    return;
+                }
+
+                this.selectedAssessment = this.assessments.find(a => a.id == assessmentId);
+                if (this.selectedAssessment) {
+                    this.displayAssessmentInfo(this.selectedAssessment);
+                    this.checkSubmissionDeadline();
+                }
+            }
+
+            displayAssessmentInfo(assessment) {
+                const panel = document.getElementById('assessmentDetails');
+                const infoDiv = document.getElementById('assessmentInfo');
+                
+                const dueDate = new Date(assessment.dueDate);
+                const isOverdue = dueDate < new Date();
+                
+                infoDiv.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <strong>Title:</strong> ${assessment.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Course:</strong> ${assessment.course?.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Type:</strong> ${assessment.assessmentType}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Points:</strong> ${assessment.totalPoints}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Due Date:</strong> 
+                            <span class="text-${isOverdue ? 'danger' : 'success'}">
+                                ${this.formatDate(assessment.dueDate)}
+                                ${isOverdue ? '(Overdue)' : ''}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-${assessment.isPublished ? 'success' : 'warning'}">
+                                ${assessment.isPublished ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+                        ${assessment.description ? `
+                            <div class="col-12 mt-2">
+                                <strong>Description:</strong>
+                                <div class="mt-1">${assessment.description}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            checkSubmissionDeadline() {
+                if (!this.selectedAssessment) return;
+
+                const dueDate = new Date(this.selectedAssessment.dueDate);
+                const isOverdue = dueDate < new Date();
+                const allowLateCheckbox = document.getElementById('allowLate');
+
+                if (isOverdue) {
+                    allowLateCheckbox.checked = true;
+                    allowLateCheckbox.parentElement.parentElement.style.display = 'block';
+                    this.showWarning('This assessment is past due. Late submission must be explicitly allowed.');
+                }
+            }
+
+            updateSubmitButton(status = null) {
+                const currentStatus = status || document.getElementById('statusSelect').value;
+                const submitImmediately = document.getElementById('submitImmediately').checked;
+                const saveBtn = document.getElementById('saveBtn');
+                const saveBtnText = document.getElementById('saveBtnText');
+                const saveAndSubmitBtn = document.getElementById('saveAndSubmitBtn');
+
+                if (currentStatus === 'Submitted' || submitImmediately) {
+                    saveBtnText.textContent = 'Save & Submit';
+                    saveBtn.className = 'btn btn-success';
+                    saveAndSubmitBtn.style.display = 'none';
+                } else {
+                    saveBtnText.textContent = 'Save as Draft';
+                    saveBtn.className = 'btn btn-primary';
+                    saveAndSubmitBtn.style.display = 'inline-block';
+                }
+            }
+
+            setupFilePreview() {
+                // File preview functionality is handled in the change event
+            }
+
+            previewFiles(files) {
+                const preview = document.getElementById('filePreview');
+                const fileList = document.getElementById('fileList');
+                
+                if (files.length === 0) {
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+                Array.from(files).forEach((file, index) => {
+                    const sizeText = this.formatFileSize(file.size);
+                    const icon = this.getFileIcon(file.type);
+                    
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="${icon} me-2"></i>
+                                <div>
+                                    <div class="fw-semibold">${file.name}</div>
+                                    <small class="text-muted">${sizeText}</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+
+                fileList.innerHTML = html;
+                preview.style.display = 'block';
+            }
+
+            getFileIcon(mimeType) {
+                if (mimeType.includes('pdf')) return 'fas fa-file-pdf text-danger';
+                if (mimeType.includes('word') || mimeType.includes('msword')) return 'fas fa-file-word text-primary';
+                if (mimeType.includes('text')) return 'fas fa-file-alt text-secondary';
+                if (mimeType.includes('image')) return 'fas fa-file-image text-success';
+                if (mimeType.includes('zip') || mimeType.includes('archive')) return 'fas fa-file-archive text-warning';
+                return 'fas fa-file text-muted';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            async saveSubmission(submitImmediately = false) {
+                try {
+                    if (!this.validateForm()) return;
+
+                    const formData = new FormData();
+                    const form = document.getElementById('submissionForm');
+                    
+                    // Add form fields
+                    formData.append('StudentId', document.getElementById('studentSelect').value);
+                    formData.append('AssessmentId', document.getElementById('assessmentSelect').value);
+                    formData.append('SubmissionText', document.querySelector('[name="Input.SubmissionText"]').value || '');
+                    formData.append('Notes', document.querySelector('[name="Input.Notes"]').value || '');
+                    
+                    // Set status based on submitImmediately parameter
+                    const status = submitImmediately ? 'Submitted' : document.getElementById('statusSelect').value;
+                    formData.append('SubmissionStatus', status);
+                    
+                    formData.append('AllowLateSubmission', document.getElementById('allowLate').checked);
+
+                    // Add files
+                    const fileInput = document.querySelector('input[type="file"]');
+                    if (fileInput.files) {
+                        Array.from(fileInput.files).forEach(file => {
+                            formData.append('files', file);
+                        });
+                    }
+
+                    // Show loading state
+                    const submitBtn = submitImmediately ? document.getElementById('saveAndSubmitBtn') : document.getElementById('saveBtn');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+                    submitBtn.disabled = true;
+
+                    const response = await fetch(`${this.apiBaseUrl}/api/Submissions`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showSuccess(submitImmediately ? 'Submission saved and submitted successfully!' : 'Submission saved successfully!');
+                        
+                        // Redirect to submissions list after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/Submissions';
+                        }, 1500);
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to save submission');
+                    }
+                } catch (error) {
+                    console.error('Error saving submission:', error);
+                    this.showError(error.message || 'Failed to save submission');
+                    
+                    // Reset button state
+                    const submitBtn = submitImmediately ? document.getElementById('saveAndSubmitBtn') : document.getElementById('saveBtn');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
+
+            validateForm() {
+                const studentId = document.getElementById('studentSelect').value;
+                const assessmentId = document.getElementById('assessmentSelect').value;
+
+                if (!studentId) {
+                    this.showError('Please select a student');
+                    document.getElementById('studentSelect').focus();
+                    return false;
+                }
+
+                if (!assessmentId) {
+                    this.showError('Please select an assessment');
+                    document.getElementById('assessmentSelect').focus();
+                    return false;
+                }
+
+                // Check if submission text or files are provided
+                const submissionText = document.querySelector('[name="Input.SubmissionText"]').value.trim();
+                const files = document.querySelector('input[type="file"]').files;
+                
+                if (!submissionText && (!files || files.length === 0)) {
+                    this.showError('Please provide either submission text or upload files');
+                    return false;
+                }
+
+                return true;
+            }
+
+            initializeFromQueryParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const assessmentId = urlParams.get('assessmentId');
+                const studentId = urlParams.get('studentId');
+
+                if (assessmentId) {
+                    document.getElementById('assessmentSelect').value = assessmentId;
+                }
+                if (studentId) {
+                    document.getElementById('studentSelect').value = studentId;
+                }
+            }
+
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            showSuccess(message) {
+                // Implement toast notification
+                console.log('Success:', message);
+                // You can integrate with your existing notification system
+            }
+
+            showError(message) {
+                // Implement toast notification
+                console.error('Error:', message);
+                alert(message); // Temporary - replace with proper toast
+            }
+
+            showWarning(message) {
+                // Implement toast notification
+                console.warn('Warning:', message);
+                // You can integrate with your existing notification system
+            }
+        }
+
+        // Global functions
+        function removeFile(index) {
+            const fileInput = document.querySelector('input[type="file"]');
+            const dt = new DataTransfer();
+            const files = Array.from(fileInput.files);
+            
+            files.splice(index, 1);
+            files.forEach(file => dt.items.add(file));
+            
+            fileInput.files = dt.files;
+            submissionCreator.previewFiles(fileInput.files);
+        }
+
+        function viewStudentProfile(studentId) {
+            window.open(`/Users/Details/${studentId}`, '_blank');
+        }
+
+        // Initialize when DOM is ready
+        let submissionCreator;
+        document.addEventListener('DOMContentLoaded', function() {
+            submissionCreator = new SubmissionCreator();
+        });
+    </script>
+}

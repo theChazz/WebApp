@@ -1,0 +1,51 @@
+@page
+@model WebApp.Pages.Questions.CreateModel
+@{
+    ViewData["Title"] = "Create Question";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header"><h4><i class="fas fa-plus"></i> Create Question</h4></div>
+                <div class="card-body">
+                    <form id="createQuestionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Question Text</label>
+                            <textarea id="Text" class="form-control" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <input id="Type" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Max Marks</label>
+                            <input id="MaxMarks" type="number" class="form-control" />
+                        </div>
+                        <button class="btn btn-primary">Create</button>
+                    </form>
+                    <div id="alert" class="alert mt-3" style="display:none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        document.getElementById('createQuestionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = { text: document.getElementById('Text').value.trim(), questionType: document.getElementById('Type').value.trim(), maxMarks: parseFloat(document.getElementById('MaxMarks').value) || 0 };
+            try {
+                const res = await fetch(`${apiBaseUrl}/api/Question`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!res.ok) throw new Error('Failed to create');
+                showAlert('Created', 'success');
+                setTimeout(() => window.location.href = '/Questions/Index', 700);
+            } catch (err) { showAlert(err.message || 'Error', 'danger'); }
+        });
+
+        function showAlert(message, type) { const alert = document.getElementById('alert'); alert.className = `alert alert-${type} mt-3`; alert.textContent = message; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 4000); }
+    </script>
+}

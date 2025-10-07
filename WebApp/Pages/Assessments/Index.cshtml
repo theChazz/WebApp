@@ -1,0 +1,619 @@
+@page
+@model WebApp.Pages.Assessments.IndexModel
+@{
+    ViewData["Title"] = "Assessments";
+}
+
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-tasks text-primary me-2"></i>Assessments
+            </h2>
+            <p class="text-muted mb-0">Manage course assessments, quizzes, and examinations</p>
+        </div>
+        <a href="/Assessments/Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Assessment
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalAssessments">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeAssessments">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Draft Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="draftAssessments">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-edit fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Published Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="publishedAssessments">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Search Assessments</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by title...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Course</label>
+                    <input type="text" class="form-control" id="courseSearch" placeholder="Search course...">
+                    <input type="hidden" id="courseIdFilter">
+                    <div id="courseSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; display:none;"></div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Assessment Type</label>
+                    <select class="form-select" id="assessmentTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                        <option value="Test">Test</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="assessmentCategoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Formative">Formative</option>
+                        <option value="Summative">Summative</option>
+                        <option value="Diagnostic">Diagnostic</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Active">Active</option>
+                        <option value="Published">Published</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View Toggle -->
+    <div class="d-flex justify-content-between mb-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary" onclick="bulkPublish()" id="bulkPublishBtn" disabled>
+                <i class="fas fa-eye"></i> Bulk Publish
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="bulkUnpublish()" id="bulkUnpublishBtn" disabled>
+                <i class="fas fa-eye-slash"></i> Bulk Unpublish
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-info" id="gridViewBtn">
+                <i class="fas fa-th"></i> Grid View
+            </button>
+            <button type="button" class="btn btn-outline-info active" id="listViewBtn">
+                <i class="fas fa-list"></i> List View
+            </button>
+        </div>
+    </div>
+
+    <!-- Assessments Grid (Hidden by default) -->
+    <div class="row d-none" id="assessmentsGrid">
+        <!-- Assessments will be loaded here as cards -->
+    </div>
+
+    <!-- List View (Default view - shown first) -->
+    <div class="card" id="tableView">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th>Title</th>
+                            <th>Course</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Max Marks</th>
+                            <th>Duration</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assessmentTableBody">
+                        <!-- Assessments will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="alert" class="alert mt-3" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        let allAssessments = [];
+        let filteredAssessments = [];
+
+        async function loadAssessments() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                allAssessments = await response.json();
+                filteredAssessments = allAssessments;
+                updateStatistics(allAssessments);
+                displayTableView(allAssessments);
+                
+                console.log('Loaded', allAssessments.length, 'assessments');
+            } catch (error) {
+                console.error('Error loading assessments:', error);
+                showAlert('Failed to load assessments: ' + error.message, 'danger');
+            }
+        }
+
+        function updateStatistics(assessments) {
+            document.getElementById('totalAssessments').textContent = assessments.length;
+            
+            const activeCount = assessments.filter(a => a.status === 'Active').length;
+            document.getElementById('activeAssessments').textContent = activeCount;
+            
+            const draftCount = assessments.filter(a => a.status === 'Draft').length;
+            document.getElementById('draftAssessments').textContent = draftCount;
+            
+            const publishedCount = assessments.filter(a => a.isPublished === true).length;
+            document.getElementById('publishedAssessments').textContent = publishedCount;
+        }
+
+        function displayTableView(assessments) {
+            const tableBody = document.getElementById('assessmentTableBody');
+            
+            if (assessments.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No assessments found</td></tr>';
+                return;
+            }
+
+            const html = assessments.map(assessment => {
+                const statusBadge = getStatusBadge(assessment.status);
+                const publishedBadge = assessment.isPublished ? 
+                    '<span class="badge bg-success ms-1">Published</span>' : 
+                    '<span class="badge bg-secondary ms-1">Unpublished</span>';
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="assessment-checkbox" value="${assessment.id}">
+                        </td>
+                        <td>
+                            <div class="fw-bold">${escapeHtml(assessment.title)}</div>
+                            <small class="text-muted">${escapeHtml(assessment.description || '')}</small>
+                        </td>
+                        <td>${escapeHtml(assessment.courseName || 'N/A')}</td>
+                        <td>
+                            <span class="badge ${getTypeBadgeClass(assessment.assessmentTypeName)}">${escapeHtml(assessment.assessmentTypeName || 'N/A')}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">${escapeHtml(assessment.assessmentCategoryName || 'N/A')}</span>
+                        </td>
+                        <td>${assessment.maxMarks || 'N/A'}</td>
+                        <td>${assessment.duration ? assessment.duration + ' min' : 'N/A'}</td>
+                        <td>${assessment.dueDate ? new Date(assessment.dueDate).toLocaleDateString() : 'N/A'}</td>
+                        <td>
+                            ${statusBadge}
+                            ${publishedBadge}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/Assessments/Details/${assessment.id}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/Assessments/Edit/${assessment.id}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                ${assessment.isPublished ? 
+                                    `<button class="btn btn-warning btn-sm" onclick="unpublishAssessment(${assessment.id})" title="Unpublish">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>` :
+                                    `<button class="btn btn-success btn-sm" onclick="publishAssessment(${assessment.id})" title="Publish">
+                                        <i class="fas fa-eye"></i>
+                                    </button>`
+                                }
+                                <button class="btn btn-danger btn-sm" onclick="deleteAssessment(${assessment.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tableBody.innerHTML = html;
+            updateBulkButtons();
+        }
+
+        function displayGridView(assessments) {
+            const gridContainer = document.getElementById('assessmentsGrid');
+            
+            if (assessments.length === 0) {
+                gridContainer.innerHTML = '<div class="col-12 text-center">No assessments found</div>';
+                return;
+            }
+
+            const html = assessments.map(assessment => {
+                const statusBadge = getStatusBadge(assessment.status);
+                const publishedBadge = assessment.isPublished ? 
+                    '<span class="badge bg-success">Published</span>' : 
+                    '<span class="badge bg-secondary">Unpublished</span>';
+                
+                return `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">${escapeHtml(assessment.title)}</h6>
+                                <input type="checkbox" class="assessment-checkbox" value="${assessment.id}">
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">${escapeHtml(assessment.description || 'No description')}</p>
+                                <p class="mb-1"><strong>Course:</strong> ${escapeHtml(assessment.courseName || 'N/A')}</p>
+                                <p class="mb-1"><strong>Type:</strong> 
+                                    <span class="badge ${getTypeBadgeClass(assessment.assessmentTypeName)}">${escapeHtml(assessment.assessmentTypeName || 'N/A')}</span>
+                                </p>
+                                <p class="mb-1"><strong>Max Marks:</strong> ${assessment.maxMarks || 'N/A'}</p>
+                                <p class="mb-1"><strong>Duration:</strong> ${assessment.duration ? assessment.duration + ' min' : 'N/A'}</p>
+                                <p class="mb-1"><strong>Due Date:</strong> ${assessment.dueDate ? new Date(assessment.dueDate).toLocaleDateString() : 'N/A'}</p>
+                                <div class="mb-2">
+                                    ${statusBadge}
+                                    ${publishedBadge}
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="/Assessments/Details/${assessment.id}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="/Assessments/Edit/${assessment.id}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAssessment(${assessment.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            gridContainer.innerHTML = html;
+            updateBulkButtons();
+        }
+
+        function getStatusBadge(status) {
+            const statusClasses = {
+                'Draft': 'bg-secondary',
+                'Active': 'bg-success',
+                'Published': 'bg-primary',
+                'Closed': 'bg-danger'
+            };
+            const badgeClass = statusClasses[status] || 'bg-secondary';
+            return `<span class="badge ${badgeClass}">${status || 'Unknown'}</span>`;
+        }
+
+        function getTypeBadgeClass(type) {
+            const typeClasses = {
+                'Quiz': 'bg-info',
+                'Assignment': 'bg-warning text-dark',
+                'Exam': 'bg-danger',
+                'Project': 'bg-success',
+                'Test': 'bg-primary'
+            };
+            return typeClasses[type] || 'bg-secondary';
+        }
+
+        async function deleteAssessment(id) {
+            if (!confirm('Are you sure you want to delete this assessment?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showAlert('Assessment deleted successfully!', 'success');
+                loadAssessments();
+            } catch (error) {
+                console.error('Error deleting assessment:', error);
+                showAlert('Failed to delete assessment: ' + error.message, 'danger');
+            }
+        }
+
+        async function publishAssessment(id) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${id}/publish`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showAlert('Assessment published successfully!', 'success');
+                loadAssessments();
+            } catch (error) {
+                console.error('Error publishing assessment:', error);
+                showAlert('Failed to publish assessment: ' + error.message, 'danger');
+            }
+        }
+
+        async function unpublishAssessment(id) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${id}/unpublish`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showAlert('Assessment unpublished successfully!', 'success');
+                loadAssessments();
+            } catch (error) {
+                console.error('Error unpublishing assessment:', error);
+                showAlert('Failed to unpublish assessment: ' + error.message, 'danger');
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const courseId = document.getElementById('courseIdFilter').value;
+            const assessmentType = document.getElementById('assessmentTypeFilter').value;
+            const assessmentCategory = document.getElementById('assessmentCategoryFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            filteredAssessments = allAssessments.filter(assessment => {
+                const matchesSearch = !searchTerm || 
+                    assessment.title?.toLowerCase().includes(searchTerm) ||
+                    assessment.description?.toLowerCase().includes(searchTerm);
+                
+                const matchesCourse = !courseId || assessment.courseId == courseId;
+                const matchesType = !assessmentType || assessment.assessmentTypeName === assessmentType;
+                const matchesCategory = !assessmentCategory || assessment.assessmentCategoryName === assessmentCategory;
+                const matchesStatus = !status || assessment.status === status;
+
+                return matchesSearch && matchesCourse && matchesType && matchesCategory && matchesStatus;
+            });
+
+            updateStatistics(filteredAssessments);
+            
+            if (document.getElementById('listViewBtn').classList.contains('active')) {
+                displayTableView(filteredAssessments);
+            } else {
+                displayGridView(filteredAssessments);
+            }
+        }
+
+        // Course search with autocomplete
+        let courseSearchTimeout;
+        document.getElementById('courseSearch').addEventListener('input', function() {
+            clearTimeout(courseSearchTimeout);
+            courseSearchTimeout = setTimeout(() => {
+                searchCourses(this.value);
+            }, 300);
+        });
+
+        async function searchCourses(term) {
+            const list = document.getElementById('courseSuggestions');
+            if (!term || term.length < 2) {
+                list.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Course`);
+                if (!response.ok) return;
+
+                const courses = await response.json();
+                const filtered = courses.filter(c => 
+                    c.courseName?.toLowerCase().includes(term.toLowerCase())
+                ).slice(0, 10);
+
+                list.innerHTML = filtered.map(c =>
+                    `<button type="button" class="list-group-item list-group-item-action"
+                             data-id="${c.id}" data-name="${c.courseName}">${c.courseName}</button>`
+                ).join('');
+                list.style.display = filtered.length ? 'block' : 'none';
+
+                [...list.querySelectorAll('button')].forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.getElementById('courseIdFilter').value = btn.getAttribute('data-id');
+                        document.getElementById('courseSearch').value = btn.getAttribute('data-name');
+                        list.style.display = 'none';
+                        applyFilters();
+                    });
+                });
+            } catch (error) {
+                console.error('Error searching courses:', error);
+            }
+        }
+
+        // View toggle functionality
+        document.getElementById('listViewBtn').addEventListener('click', function() {
+            document.getElementById('tableView').classList.remove('d-none');
+            document.getElementById('assessmentsGrid').classList.add('d-none');
+            this.classList.add('active');
+            document.getElementById('gridViewBtn').classList.remove('active');
+            displayTableView(filteredAssessments);
+        });
+
+        document.getElementById('gridViewBtn').addEventListener('click', function() {
+            document.getElementById('tableView').classList.add('d-none');
+            document.getElementById('assessmentsGrid').classList.remove('d-none');
+            this.classList.add('active');
+            document.getElementById('listViewBtn').classList.remove('active');
+            displayGridView(filteredAssessments);
+        });
+
+        // Bulk operations
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.assessment-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            
+            updateBulkButtons();
+        }
+
+        function updateBulkButtons() {
+            const checkedBoxes = document.querySelectorAll('.assessment-checkbox:checked');
+            const bulkPublishBtn = document.getElementById('bulkPublishBtn');
+            const bulkUnpublishBtn = document.getElementById('bulkUnpublishBtn');
+            
+            const hasChecked = checkedBoxes.length > 0;
+            bulkPublishBtn.disabled = !hasChecked;
+            bulkUnpublishBtn.disabled = !hasChecked;
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('assessment-checkbox')) {
+                updateBulkButtons();
+            }
+        });
+
+        async function bulkPublish() {
+            const checkedBoxes = document.querySelectorAll('.assessment-checkbox:checked');
+            const ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+            
+            if (ids.length === 0) return;
+            
+            if (!confirm(`Are you sure you want to publish ${ids.length} assessment(s)?`)) return;
+
+            try {
+                for (const id of ids) {
+                    await publishAssessment(id);
+                }
+                showAlert(`${ids.length} assessment(s) published successfully!`, 'success');
+                loadAssessments();
+            } catch (error) {
+                console.error('Error in bulk publish:', error);
+                showAlert('Error during bulk publish operation', 'danger');
+            }
+        }
+
+        async function bulkUnpublish() {
+            const checkedBoxes = document.querySelectorAll('.assessment-checkbox:checked');
+            const ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+            
+            if (ids.length === 0) return;
+            
+            if (!confirm(`Are you sure you want to unpublish ${ids.length} assessment(s)?`)) return;
+
+            try {
+                for (const id of ids) {
+                    await unpublishAssessment(id);
+                }
+                showAlert(`${ids.length} assessment(s) unpublished successfully!`, 'success');
+                loadAssessments();
+            } catch (error) {
+                console.error('Error in bulk unpublish:', error);
+                showAlert('Error during bulk unpublish operation', 'danger');
+            }
+        }
+
+        // Event listeners for filters
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('assessmentTypeFilter').addEventListener('change', applyFilters);
+        document.getElementById('assessmentCategoryFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Load assessments when page loads
+        document.addEventListener('DOMContentLoaded', loadAssessments);
+    </script>
+}

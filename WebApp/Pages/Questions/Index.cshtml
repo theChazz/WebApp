@@ -1,0 +1,90 @@
+@page
+@model WebApp.Pages.Questions.IndexModel
+@{
+    ViewData["Title"] = "Questions";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Questions</h2>
+        <a href="/Questions/Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Question
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="questionsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Text</th>
+                            <th>Type</th>
+                            <th>Marks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="questionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert" class="alert mt-3" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        async function loadQuestions() {
+            try {
+                const res = await fetch(`${apiBaseUrl}/api/Question`);
+                if (!res.ok) throw new Error('Failed to load questions');
+                const items = await res.json();
+                const body = document.getElementById('questionsBody');
+                body.innerHTML = items.map(i => `
+                    <tr>
+                        <td>${i.id}</td>
+                        <td>${escapeHtml(i.text)}</td>
+                        <td>${escapeHtml(i.questionType || '')}</td>
+                        <td>${i.maxMarks || ''}</td>
+                        <td>
+                            <a href="/Questions/Details/${i.id}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                            <a href="/Questions/Edit/${i.id}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${i.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showAlert(err.message || 'Error', 'danger');
+            }
+        }
+
+        async function deleteQuestion(id) {
+            if (!confirm('Delete this question?')) return;
+            try {
+                const res = await fetch(`${apiBaseUrl}/api/Question/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to delete');
+                showAlert('Deleted', 'success');
+                loadQuestions();
+            } catch (err) { showAlert(err.message || 'Error deleting', 'danger'); }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 4000);
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadQuestions);
+    </script>
+}

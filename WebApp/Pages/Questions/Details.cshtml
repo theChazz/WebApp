@@ -1,0 +1,36 @@
+@page "{id:int}"
+@model WebApp.Pages.Questions.DetailsModel
+@{
+    ViewData["Title"] = "Question Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Question Details</h2>
+        <div>
+            <a href="/Questions/Edit/@Model.Id" class="btn btn-primary">Edit</a>
+            <a href="/Questions/Index" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3"><div class="col-md-3"><strong>ID</strong></div><div class="col-md-9">@Model.Id</div></div>
+            <div class="row mb-3"><div class="col-md-3"><strong>Text</strong></div><div class="col-md-9" id="textCell"></div></div>
+            <div class="row mb-3"><div class="col-md-3"><strong>Type</strong></div><div class="col-md-9" id="typeCell"></div></div>
+            <div class="row mb-3"><div class="col-md-3"><strong>Max Marks</strong></div><div class="col-md-9" id="marksCell"></div></div>
+        </div>
+    </div>
+    <div id="alert" class="alert mt-3" style="display:none"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const id = '@Model.Id';
+        async function load() {
+            try { const res = await fetch(`${apiBaseUrl}/api/Question/${id}`); if (!res.ok) throw new Error('Failed'); const d = await res.json(); document.getElementById('textCell').textContent = d.text || ''; document.getElementById('typeCell').textContent = d.questionType || ''; document.getElementById('marksCell').textContent = d.maxMarks || ''; } catch (err) { showAlert(err.message || 'Error', 'danger'); } }
+        function showAlert(message, type) { const alert = document.getElementById('alert'); alert.className = `alert alert-${type} mt-3`; alert.textContent = message; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 4000); }
+        document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

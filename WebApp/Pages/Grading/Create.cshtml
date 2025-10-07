@@ -1,0 +1,706 @@
+@page
+@model WebApp.Pages.Grading.CreateModel
+@{
+    ViewData["Title"] = "Create Grade";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        Create New Grade
+                    </h2>
+                    <p class="text-muted mb-0">Grade a student submission</p>
+                </div>
+                <a href="/Grading" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Grading
+                </a>
+            </div>
+
+            <form id="gradingForm">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Submission Details
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label required">Submission</label>
+                            <select class="form-select" asp-for="Input.SubmissionId" id="submissionSelect" required>
+                                <option value="">Select a submission to grade...</option>
+                            </select>
+                            <span asp-validation-for="Input.SubmissionId" class="text-danger"></span>
+                            <div class="form-text">Choose the submission you want to grade</div>
+                        </div>
+
+                        <!-- Submission Details (populated when submission is selected) -->
+                        <div id="submissionDetails" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2">
+                                        <h6 class="alert-heading mb-1">Submission Information</h6>
+                                        <div id="submissionInfo">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-star me-2"></i>
+                            Grade Information
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Grade (0-100)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" asp-for="Input.Grade" min="0" max="100" step="0.1" required id="gradeInput">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <span asp-validation-for="Input.Grade" class="text-danger"></span>
+                                <div class="form-text">Enter the grade as a percentage</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Letter Grade</label>
+                                <input type="text" class="form-control" id="letterGrade" readonly>
+                                <div class="form-text">Automatically calculated letter grade</div>
+                            </div>
+                        </div>
+
+                        <!-- Grade Visual Indicator -->
+                        <div class="mt-3">
+                            <label class="form-label">Grade Visualization</label>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" id="gradeBar" role="progressbar" style="width: 0%">
+                                    <span id="gradeBarText">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Grading Status</label>
+                                <select class="form-select" asp-for="Input.GradingStatus" id="gradingStatusSelect">
+                                    <option value="InProgress">In Progress</option>
+                                    <option value="Graded" selected>Graded</option>
+                                    <option value="NeedsReview">Needs Review</option>
+                                </select>
+                                <div class="form-text">Current status of the grading process</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="Input.NotifyStudent" id="notifyStudent" checked>
+                                        <label class="form-check-label" for="notifyStudent">
+                                            Notify Student
+                                        </label>
+                                        <div class="form-text">Send email notification to student</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-comment me-2"></i>
+                            Feedback & Notes
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Student Feedback</label>
+                            <textarea class="form-control" asp-for="Input.Feedback" rows="6" 
+                                     placeholder="Provide feedback for the student..."></textarea>
+                            <span asp-validation-for="Input.Feedback" class="text-danger"></span>
+                            <div class="form-text">This feedback will be visible to the student</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Private Notes</label>
+                            <textarea class="form-control" asp-for="Input.PrivateNotes" rows="3" 
+                                     placeholder="Private notes for instructors only..."></textarea>
+                            <div class="form-text">These notes are only visible to instructors</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Grade Override Reason</label>
+                            <textarea class="form-control" asp-for="Input.GradeOverrideReason" rows="2" 
+                                     placeholder="Reason for any grade adjustments..."></textarea>
+                            <div class="form-text">Explain any deviations from standard grading criteria</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rubric Section -->
+                <div class="card mt-4" id="rubricCard" style="display: none;">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-list-ul me-2"></i>
+                            Rubric Grading
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="rubricContainer">
+                            <!-- Populated by JavaScript when assessment has rubric -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success" id="saveBtn">
+                        <i class="fas fa-save me-1"></i>
+                        Save Grade
+                    </button>
+                    <button type="button" class="btn btn-warning" id="saveDraftBtn">
+                        <i class="fas fa-edit me-1"></i>
+                        Save as Draft
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Grading'">
+                        <i class="fas fa-times me-1"></i>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Student Information Panel -->
+            <div class="card" id="studentInfoPanel" style="display: none;">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Student Information
+                    </h6>
+                </div>
+                <div class="card-body" id="studentInfo">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Assessment Information -->
+            <div class="card mt-4" id="assessmentInfoPanel" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Assessment Details
+                    </h6>
+                </div>
+                <div class="card-body" id="assessmentInfo">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Submission Content -->
+            <div class="card mt-4" id="submissionContentPanel" style="display: none;">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-text me-2"></i>
+                        Submission Content
+                    </h6>
+                </div>
+                <div class="card-body" id="submissionContent">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Grading Guidelines -->
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Grading Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Review submission thoroughly
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Provide constructive feedback
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Use rubric when available
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Be fair and consistent
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Document grade reasoning
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Grade Scale Reference -->
+            <div class="card mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Grade Scale
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 text-sm">
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-success fw-bold">A:</span>
+                                <span>90-100%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-info fw-bold">B:</span>
+                                <span>80-89%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-warning fw-bold">C:</span>
+                                <span>70-79%</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between">
+                                <span style="color: orange" class="fw-bold">D:</span>
+                                <span>60-69%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-danger fw-bold">F:</span>
+                                <span>0-59%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        class GradeCreator {
+            constructor() {
+                this.apiBaseUrl = '@Model.ApiBaseUrl';
+                this.submissions = [];
+                this.selectedSubmission = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadSubmissions();
+                this.initializeFromQueryParams();
+            }
+
+            bindEvents() {
+                // Submission selection
+                document.getElementById('submissionSelect').addEventListener('change', (e) => {
+                    this.onSubmissionSelected(e.target.value);
+                });
+
+                // Grade input
+                document.getElementById('gradeInput').addEventListener('input', (e) => {
+                    this.updateGradeVisualization(e.target.value);
+                });
+
+                // Form submission
+                document.getElementById('gradingForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveGrade(false);
+                });
+
+                // Save draft button
+                document.getElementById('saveDraftBtn').addEventListener('click', () => {
+                    this.saveGrade(true);
+                });
+            }
+
+            async loadSubmissions() {
+                try {
+                    // Load ungraded submissions
+                    const response = await apiUtils.get(`${this.apiBaseUrl}/api/Submissions?gradingStatus=NotGraded&pageSize=1000`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.submissions = data.items || [];
+                        this.populateSubmissionDropdown();
+                    }
+                } catch (error) {
+                    console.error('Error loading submissions:', error);
+                    this.showError('Failed to load submissions');
+                }
+            }
+
+            populateSubmissionDropdown() {
+                const select = document.getElementById('submissionSelect');
+                const currentValue = select.value;
+                
+                // Clear existing options except the first one
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                this.submissions.forEach(submission => {
+                    const option = document.createElement('option');
+                    option.value = submission.id;
+                    option.textContent = `${submission.student?.firstName} ${submission.student?.lastName} - ${submission.assessment?.title}`;
+                    select.appendChild(option);
+                });
+
+                // Restore selection if it was set
+                if (currentValue) {
+                    select.value = currentValue;
+                    this.onSubmissionSelected(currentValue);
+                }
+            }
+
+            onSubmissionSelected(submissionId) {
+                if (!submissionId) {
+                    this.hideSubmissionInfo();
+                    this.selectedSubmission = null;
+                    return;
+                }
+
+                this.selectedSubmission = this.submissions.find(s => s.id == submissionId);
+                if (this.selectedSubmission) {
+                    this.displaySubmissionInfo(this.selectedSubmission);
+                }
+            }
+
+            displaySubmissionInfo(submission) {
+                // Show submission details alert
+                const panel = document.getElementById('submissionDetails');
+                const infoDiv = document.getElementById('submissionInfo');
+                
+                infoDiv.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <strong>Student:</strong> ${submission.student?.firstName} ${submission.student?.lastName}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Assessment:</strong> ${submission.assessment?.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Course:</strong> ${submission.assessment?.course?.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Points:</strong> ${submission.assessment?.totalPoints}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Submitted:</strong> ${this.formatDate(submission.submittedAt)}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-primary">${submission.submissionStatus}</span>
+                        </div>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+
+                // Display student info
+                this.displayStudentInfo(submission.student);
+                
+                // Display assessment info
+                this.displayAssessmentInfo(submission.assessment);
+                
+                // Display submission content
+                this.displaySubmissionContent(submission);
+            }
+
+            displayStudentInfo(student) {
+                const panel = document.getElementById('studentInfoPanel');
+                const infoDiv = document.getElementById('studentInfo');
+                
+                infoDiv.innerHTML = `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar avatar-lg bg-primary text-white rounded-circle me-3">
+                            ${student.firstName.charAt(0)}${student.lastName.charAt(0)}
+                        </div>
+                        <div>
+                            <h6 class="mb-1">${student.firstName} ${student.lastName}</h6>
+                            <small class="text-muted">${student.email}</small>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Student ID:</small>
+                        <div class="fw-semibold">${student.id}</div>
+                    </div>
+                    ${student.program ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Program:</small>
+                            <div class="fw-semibold">${student.program}</div>
+                        </div>
+                    ` : ''}
+                    <div class="mt-3">
+                        <a href="/Users/Details/${student.id}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="fas fa-user me-1"></i>
+                            View Profile
+                        </a>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            displayAssessmentInfo(assessment) {
+                const panel = document.getElementById('assessmentInfoPanel');
+                const infoDiv = document.getElementById('assessmentInfo');
+                
+                infoDiv.innerHTML = `
+                    <div class="mb-2">
+                        <small class="text-muted">Title:</small>
+                        <div class="fw-semibold">${assessment.title}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Type:</small>
+                        <div class="fw-semibold">${assessment.assessmentType}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Total Points:</small>
+                        <div class="fw-semibold">${assessment.totalPoints}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Due Date:</small>
+                        <div class="fw-semibold">${this.formatDate(assessment.dueDate)}</div>
+                    </div>
+                    ${assessment.description ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Description:</small>
+                            <div class="fw-semibold">${assessment.description}</div>
+                        </div>
+                    ` : ''}
+                    <div class="mt-3">
+                        <a href="/Assessments/Details/${assessment.id}" class="btn btn-sm btn-outline-info" target="_blank">
+                            <i class="fas fa-clipboard-list me-1"></i>
+                            View Assessment
+                        </a>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            displaySubmissionContent(submission) {
+                const panel = document.getElementById('submissionContentPanel');
+                const contentDiv = document.getElementById('submissionContent');
+                
+                let content = '';
+                
+                if (submission.submissionText) {
+                    content += `
+                        <div class="mb-3">
+                            <h6 class="fw-semibold">Submission Text:</h6>
+                            <div class="border rounded p-2 bg-light">
+                                ${submission.submissionText.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (submission.files && submission.files.length > 0) {
+                    content += `
+                        <div class="mb-3">
+                            <h6 class="fw-semibold">Attached Files:</h6>
+                            <div class="list-group list-group-flush">
+                                ${submission.files.map(file => `
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <div>
+                                            <i class="fas fa-file me-2"></i>
+                                            ${file.originalFileName}
+                                        </div>
+                                        <a href="/api/Files/${file.id}/download" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (!content) {
+                    content = '<p class="text-muted">No content available</p>';
+                }
+                
+                contentDiv.innerHTML = content;
+                panel.style.display = 'block';
+            }
+
+            hideSubmissionInfo() {
+                document.getElementById('submissionDetails').style.display = 'none';
+                document.getElementById('studentInfoPanel').style.display = 'none';
+                document.getElementById('assessmentInfoPanel').style.display = 'none';
+                document.getElementById('submissionContentPanel').style.display = 'none';
+            }
+
+            updateGradeVisualization(grade) {
+                const numericGrade = parseFloat(grade) || 0;
+                const letterGrade = this.calculateLetterGrade(numericGrade);
+                const gradeColor = this.getGradeColor(numericGrade);
+                
+                // Update letter grade
+                document.getElementById('letterGrade').value = letterGrade;
+                
+                // Update progress bar
+                const gradeBar = document.getElementById('gradeBar');
+                const gradeBarText = document.getElementById('gradeBarText');
+                
+                gradeBar.style.width = `${numericGrade}%`;
+                gradeBar.className = `progress-bar bg-${gradeColor}`;
+                gradeBarText.textContent = `${numericGrade}%`;
+            }
+
+            calculateLetterGrade(grade) {
+                if (grade >= 90) return 'A';
+                if (grade >= 80) return 'B';
+                if (grade >= 70) return 'C';
+                if (grade >= 60) return 'D';
+                return 'F';
+            }
+
+            getGradeColor(grade) {
+                if (grade >= 90) return 'success';
+                if (grade >= 80) return 'info';
+                if (grade >= 70) return 'warning';
+                if (grade >= 60) return 'orange';
+                return 'danger';
+            }
+
+            async saveGrade(isDraft = false) {
+                try {
+                    if (!this.validateForm()) return;
+
+                    const gradeData = {
+                        submissionId: parseInt(document.getElementById('submissionSelect').value),
+                        grade: parseFloat(document.getElementById('gradeInput').value),
+                        feedback: document.querySelector('[name="Input.Feedback"]').value || null,
+                        gradingStatus: isDraft ? 'InProgress' : document.getElementById('gradingStatusSelect').value,
+                        privateNotes: document.querySelector('[name="Input.PrivateNotes"]').value || null,
+                        gradeOverrideReason: document.querySelector('[name="Input.GradeOverrideReason"]').value || null,
+                        notifyStudent: document.getElementById('notifyStudent').checked && !isDraft
+                    };
+
+                    // Show loading state
+                    const submitBtn = isDraft ? document.getElementById('saveDraftBtn') : document.getElementById('saveBtn');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+                    submitBtn.disabled = true;
+
+                    const response = await apiUtils.post(`${this.apiBaseUrl}/api/Grading`, gradeData);
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showSuccess(isDraft ? 'Grade saved as draft!' : 'Grade saved successfully!');
+                        
+                        // Redirect to grading list after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/Grading';
+                        }, 1500);
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to save grade');
+                    }
+                } catch (error) {
+                    console.error('Error saving grade:', error);
+                    this.showError(error.message || 'Failed to save grade');
+                    
+                    // Reset button state
+                    const submitBtn = isDraft ? document.getElementById('saveDraftBtn') : document.getElementById('saveBtn');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
+
+            validateForm() {
+                const submissionId = document.getElementById('submissionSelect').value;
+                const grade = document.getElementById('gradeInput').value;
+
+                if (!submissionId) {
+                    this.showError('Please select a submission to grade');
+                    document.getElementById('submissionSelect').focus();
+                    return false;
+                }
+
+                if (!grade || isNaN(parseFloat(grade))) {
+                    this.showError('Please enter a valid grade');
+                    document.getElementById('gradeInput').focus();
+                    return false;
+                }
+
+                const numericGrade = parseFloat(grade);
+                if (numericGrade < 0 || numericGrade > 100) {
+                    this.showError('Grade must be between 0 and 100');
+                    document.getElementById('gradeInput').focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+            initializeFromQueryParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const submissionId = urlParams.get('submissionId');
+
+                if (submissionId) {
+                    // Wait for submissions to load, then set the value
+                    setTimeout(() => {
+                        const select = document.getElementById('submissionSelect');
+                        select.value = submissionId;
+                        this.onSubmissionSelected(submissionId);
+                    }, 1000);
+                }
+            }
+
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            showSuccess(message) {
+                // Implement toast notification
+                console.log('Success:', message);
+                // You can integrate with your existing notification system
+            }
+
+            showError(message) {
+                // Implement toast notification
+                console.error('Error:', message);
+                alert(message); // Temporary - replace with proper toast
+            }
+        }
+
+        // Initialize when DOM is ready
+        let gradeCreator;
+        document.addEventListener('DOMContentLoaded', function() {
+            gradeCreator = new GradeCreator();
+        });
+    </script>
+}

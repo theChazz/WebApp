@@ -1,0 +1,451 @@
+@page "{id:int}"
+@model WebApp.Pages.Assessments.DetailsModel
+@{
+    ViewData["Title"] = "Assessment Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tasks text-primary me-2"></i>Assessment Details</h2>
+        <div>
+            <a href="/Assessments/Edit/@Model.Id" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <button class="btn btn-success" id="publishBtn" onclick="publishAssessment(@Model.Id)" style="display: none;">
+                <i class="fas fa-eye"></i> Publish
+            </button>
+            <button class="btn btn-warning" id="unpublishBtn" onclick="unpublishAssessment(@Model.Id)" style="display: none;">
+                <i class="fas fa-eye-slash"></i> Unpublish
+            </button>
+            <a href="/Submissions?assessmentId=@Model.Id" class="btn btn-info">
+                <i class="fas fa-upload"></i> View Submissions
+            </a>
+            <a href="/Assessments" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Assessment Details -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Assessment Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Title:</div>
+                        <div class="col-md-9" id="titleDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Description:</div>
+                        <div class="col-md-9" id="descriptionDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Course:</div>
+                        <div class="col-md-9" id="courseDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Type:</div>
+                        <div class="col-md-9" id="typeDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Category:</div>
+                        <div class="col-md-9" id="categoryDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Max Marks:</div>
+                        <div class="col-md-9" id="maxMarksDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Duration:</div>
+                        <div class="col-md-9" id="durationDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Attempts Allowed:</div>
+                        <div class="col-md-9" id="attemptsAllowedDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Weighting:</div>
+                        <div class="col-md-9" id="weightingDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Status:</div>
+                        <div class="col-md-9" id="statusDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Published:</div>
+                        <div class="col-md-9" id="publishedDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Schedule Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Open Date:</div>
+                        <div class="col-md-9" id="openDateDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Due Date:</div>
+                        <div class="col-md-9" id="dueDateDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Close Date:</div>
+                        <div class="col-md-9" id="closeDateDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderation Information -->
+            <div class="card mt-4" id="moderationCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">Moderation Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Requires Moderation:</div>
+                        <div class="col-md-9" id="requiresModerationDisplay"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">External Moderation:</div>
+                        <div class="col-md-9" id="requiresExternalModerationDisplay"></div>
+                    </div>
+                    <div class="row mb-3" id="moderationPercentageRow" style="display: none;">
+                        <div class="col-md-3 fw-bold">Moderation Percentage:</div>
+                        <div class="col-md-9" id="moderationPercentageDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="card mt-4" id="instructionsCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="instructionsDisplay"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Assessment Statistics</h5>
+                </div>
+                <div class="card-body" id="statisticsBody">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/Submissions?assessmentId=@Model.Id" class="btn btn-outline-primary">
+                            <i class="fas fa-upload"></i> View All Submissions
+                        </a>
+                        <a href="/Grading?assessmentId=@Model.Id" class="btn btn-outline-success">
+                            <i class="fas fa-star"></i> Grade Submissions
+                        </a>
+                        <button class="btn btn-outline-info" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="duplicateAssessment()">
+                            <i class="fas fa-copy"></i> Duplicate Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body" id="recentActivityBody">
+                    <div class="text-center">
+                        <small class="text-muted">Loading recent activity...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert" class="alert mt-3" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const assessmentId = '@Model.Id';
+
+        async function loadAssessmentDetails() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${assessmentId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const assessment = await response.json();
+                displayAssessmentDetails(assessment);
+                
+                // Load statistics
+                loadAssessmentStatistics();
+                
+                // Load recent activity
+                loadRecentActivity();
+
+            } catch (error) {
+                console.error('Error loading assessment details:', error);
+                showAlert('Failed to load assessment details: ' + error.message, 'danger');
+            }
+        }
+
+        function displayAssessmentDetails(assessment) {
+            document.getElementById('titleDisplay').textContent = assessment.title || 'N/A';
+            document.getElementById('descriptionDisplay').textContent = assessment.description || 'No description provided';
+            document.getElementById('courseDisplay').textContent = assessment.courseName || 'N/A';
+            
+            // Type with badge
+            const typeBadge = `<span class="badge ${getTypeBadgeClass(assessment.assessmentTypeName)}">${assessment.assessmentTypeName || 'N/A'}</span>`;
+            document.getElementById('typeDisplay').innerHTML = typeBadge;
+            
+            // Category with badge
+            document.getElementById('categoryDisplay').innerHTML = `<span class="badge bg-info">${assessment.assessmentCategoryName || 'N/A'}</span>`;
+            
+            document.getElementById('maxMarksDisplay').textContent = assessment.maxMarks || 'N/A';
+            document.getElementById('durationDisplay').textContent = assessment.duration ? `${assessment.duration} minutes` : 'No time limit';
+            document.getElementById('attemptsAllowedDisplay').textContent = assessment.attemptsAllowed || 'Unlimited';
+            document.getElementById('weightingDisplay').textContent = assessment.weightingPercentage ? `${assessment.weightingPercentage}%` : 'N/A';
+            
+            // Status with badge
+            const statusBadge = getStatusBadge(assessment.status);
+            document.getElementById('statusDisplay').innerHTML = statusBadge;
+            
+            // Published status with badge
+            const publishedBadge = assessment.isPublished ? 
+                '<span class="badge bg-success">Published</span>' : 
+                '<span class="badge bg-secondary">Unpublished</span>';
+            document.getElementById('publishedDisplay').innerHTML = publishedBadge;
+            
+            // Show/hide publish buttons
+            if (assessment.isPublished) {
+                document.getElementById('unpublishBtn').style.display = 'inline-block';
+                document.getElementById('publishBtn').style.display = 'none';
+            } else {
+                document.getElementById('publishBtn').style.display = 'inline-block';
+                document.getElementById('unpublishBtn').style.display = 'none';
+            }
+
+            // Dates
+            document.getElementById('openDateDisplay').textContent = assessment.openDate ? 
+                new Date(assessment.openDate).toLocaleString() : 'Not set';
+            document.getElementById('dueDateDisplay').textContent = assessment.dueDate ? 
+                new Date(assessment.dueDate).toLocaleString() : 'Not set';
+            document.getElementById('closeDateDisplay').textContent = assessment.closeDate ? 
+                new Date(assessment.closeDate).toLocaleString() : 'Not set';
+
+            // Moderation information
+            if (assessment.requiresModeration || assessment.requiresExternalModeration) {
+                document.getElementById('moderationCard').style.display = 'block';
+                document.getElementById('requiresModerationDisplay').innerHTML = 
+                    assessment.requiresModeration ? '<span class="badge bg-warning">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+                document.getElementById('requiresExternalModerationDisplay').innerHTML = 
+                    assessment.requiresExternalModeration ? '<span class="badge bg-warning">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+                
+                if (assessment.moderationPercentage) {
+                    document.getElementById('moderationPercentageRow').style.display = 'flex';
+                    document.getElementById('moderationPercentageDisplay').textContent = assessment.moderationPercentage + '%';
+                }
+            }
+
+            // Instructions
+            if (assessment.instructions) {
+                document.getElementById('instructionsCard').style.display = 'block';
+                document.getElementById('instructionsDisplay').textContent = assessment.instructions;
+            }
+        }
+
+        async function loadAssessmentStatistics() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${assessmentId}/statistics`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const stats = await response.json();
+                displayStatistics(stats);
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                document.getElementById('statisticsBody').innerHTML = 
+                    '<div class="text-center text-muted"><small>Statistics not available</small></div>';
+            }
+        }
+
+        function displayStatistics(stats) {
+            const html = `
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="h4 text-primary">${stats.totalSubmissions || 0}</div>
+                        <small class="text-muted">Total Submissions</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-success">${stats.gradedSubmissions || 0}</div>
+                        <small class="text-muted">Graded</small>
+                    </div>
+                </div>
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="h4 text-warning">${stats.averageScore || 'N/A'}</div>
+                        <small class="text-muted">Average Score</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-info">${stats.completionRate || 'N/A'}</div>
+                        <small class="text-muted">Completion Rate</small>
+                    </div>
+                </div>
+                ${stats.submissionRate ? `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small>Submission Progress</small>
+                        <small>${stats.submissionRate}%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: ${stats.submissionRate}%" 
+                             aria-valuenow="${stats.submissionRate}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('statisticsBody').innerHTML = html;
+        }
+
+        async function loadRecentActivity() {
+            try {
+                // This would typically load recent submissions, grades, etc.
+                // For now, we'll show a placeholder
+                document.getElementById('recentActivityBody').innerHTML = `
+                    <div class="small">
+                        <div class="mb-2">
+                            <i class="fas fa-upload text-primary"></i>
+                            <span class="ms-2">Recent submissions</span>
+                        </div>
+                        <div class="mb-2">
+                            <i class="fas fa-star text-success"></i>
+                            <span class="ms-2">Recent grades</span>
+                        </div>
+                        <div class="text-muted text-center mt-3">
+                            <small>Activity details will be loaded here</small>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+            }
+        }
+
+        function getStatusBadge(status) {
+            const statusClasses = {
+                'Draft': 'bg-secondary',
+                'Active': 'bg-success',
+                'Published': 'bg-primary',
+                'Closed': 'bg-danger'
+            };
+            const badgeClass = statusClasses[status] || 'bg-secondary';
+            return `<span class="badge ${badgeClass}">${status || 'Unknown'}</span>`;
+        }
+
+        function getTypeBadgeClass(type) {
+            const typeClasses = {
+                'Quiz': 'bg-info',
+                'Assignment': 'bg-warning text-dark',
+                'Exam': 'bg-danger',
+                'Project': 'bg-success',
+                'Test': 'bg-primary'
+            };
+            return typeClasses[type] || 'bg-secondary';
+        }
+
+        async function publishAssessment(id) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${id}/publish`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showAlert('Assessment published successfully!', 'success');
+                loadAssessmentDetails(); // Reload to update UI
+
+            } catch (error) {
+                console.error('Error publishing assessment:', error);
+                showAlert('Failed to publish assessment: ' + error.message, 'danger');
+            }
+        }
+
+        async function unpublishAssessment(id) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Assessment/${id}/unpublish`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showAlert('Assessment unpublished successfully!', 'success');
+                loadAssessmentDetails(); // Reload to update UI
+
+            } catch (error) {
+                console.error('Error unpublishing assessment:', error);
+                showAlert('Failed to unpublish assessment: ' + error.message, 'danger');
+            }
+        }
+
+        function exportData() {
+            // This would typically export assessment data
+            showAlert('Export functionality will be implemented', 'info');
+        }
+
+        function duplicateAssessment() {
+            // This would create a copy of the assessment
+            showAlert('Duplicate functionality will be implemented', 'info');
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load assessment details when page loads
+        document.addEventListener('DOMContentLoaded', loadAssessmentDetails);
+    </script>
+}

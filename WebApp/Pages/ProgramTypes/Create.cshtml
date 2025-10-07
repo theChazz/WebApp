@@ -1,0 +1,66 @@
+@page
+@model WebApp.Pages.ProgramTypes.CreateModel
+@{
+    ViewData["Title"] = "Create Program Type";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-plus"></i> Create Program Type</h4>
+                </div>
+                <div class="card-body">
+                    <form id="createProgramTypeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input id="Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea id="Description" class="form-control"></textarea>
+                        </div>
+                        <button class="btn btn-primary">Create</button>
+                    </form>
+                    <div id="alert" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        document.getElementById('createProgramTypeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('Name').value.trim(),
+                description: document.getElementById('Description').value.trim()
+            };
+
+            try {
+                const res = await fetch(`${apiBaseUrl}/api/ProgramType`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Failed to create');
+                showAlert('Created successfully', 'success');
+                setTimeout(() => window.location.href = '/ProgramTypes/Index', 800);
+            } catch (err) {
+                showAlert(err.message || 'Error creating', 'danger');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 4000);
+        }
+    </script>
+}

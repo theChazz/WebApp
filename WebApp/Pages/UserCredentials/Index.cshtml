@@ -1,0 +1,53 @@
+@page
+@model WebApp.Pages.UserCredentials.IndexModel
+@{
+    ViewData["Title"] = "User Credentials";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Credentials</h2>
+        <a href="/UserCredentials/Create" class="btn btn-primary"><i class="fas fa-plus"></i> Create</a>
+    </div>
+    <div class="card"><div class="card-body"><div class="table-responsive">
+    <table class="table"><thead><tr><th>ID</th><th>User</th><th>Credential Type</th><th>Registration #</th><th>Valid From</th><th>Valid To</th><th>Status</th><th>Actions</th></tr></thead><tbody id="body"></tbody></table>
+    </div></div></div>
+    <div id="alert" class="alert mt-3" style="display:none"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        async function load(){
+            try{
+                const res = await fetch(`${apiBaseUrl}/api/UserCredential`);
+                if(!res.ok){ const txt = await res.text(); throw new Error(`Status ${res.status}: ${txt}`); }
+                const items = await res.json();
+                const body = document.getElementById('body');
+                if(!items || items.length === 0){
+                    body.innerHTML = `<tr><td colspan="8" class="text-center">No credentials found</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = items.map(i=>`<tr>
+                    <td>${i.id}</td>
+                    <td>${escapeHtml(i.user?.fullName || i.userFullName || '')}</td>
+                    <td>${escapeHtml(i.credentialType || '')}</td>
+                    <td>${escapeHtml(i.registrationNumber || '')}</td>
+                    <td>${i.validFrom ? new Date(i.validFrom).toLocaleDateString() : ''}</td>
+                    <td>${i.validTo ? new Date(i.validTo).toLocaleDateString() : ''}</td>
+                    <td>${escapeHtml(i.status || '')}</td>
+                    <td>
+                        <a href='/UserCredentials/Details/${i.id}' class='btn btn-info btn-sm'><i class='fas fa-eye'></i></a>
+                        <a href='/UserCredentials/Edit/${i.id}' class='btn btn-primary btn-sm'><i class='fas fa-edit'></i></a>
+                        <button class='btn btn-danger btn-sm' onclick='deleteItem(${i.id})'><i class='fas fa-trash'></i></button>
+                    </td>
+                </tr>`).join('');
+            } catch(err){ showAlert(err.message||'Error','danger'); }
+        }
+        async function deleteItem(id){ if(!confirm('Delete?')) return; try{ const res=await fetch(`${apiBaseUrl}/api/UserCredential/${id}`,{method:'DELETE'}); if(!res.ok) throw new Error('Failed'); showAlert('Deleted','success'); load(); }catch(err){ showAlert(err.message||'Error','danger'); } }
+        function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; setTimeout(()=>a.style.display='none',4000); }
+        function escapeHtml(u){ if(!u) return ''; return u.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

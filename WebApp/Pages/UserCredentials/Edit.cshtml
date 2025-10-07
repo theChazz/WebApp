@@ -1,0 +1,121 @@
+@page "{id:int}"
+@model WebApp.Pages.UserCredentials.EditModel
+@{
+    ViewData["Title"] = "Edit Credential";
+}
+
+<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-8"><div class="card">
+<div class="card-header"><h4><i class="fas fa-edit"></i> Edit Credential</h4></div>
+<div class="card-body">
+<form id="form">
+    <input type="hidden" id="UserId" />
+    <div class="mb-3">
+        <label class="form-label">User</label>
+        <input id="UserNameDisplay" class="form-control" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Credential Type</label>
+        <input id="CredentialType" class="form-control" placeholder="e.g., Assessor, Moderator" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Registration Number</label>
+        <input id="RegistrationNumber" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Seta Body ID (optional)</label>
+        <input id="SetaBodyId" type="number" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Scope (optional)</label>
+        <textarea id="Scope" class="form-control"></textarea>
+    </div>
+    <div class="row">
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Valid From</label>
+            <input id="ValidFrom" type="date" class="form-control" required />
+        </div>
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Valid To</label>
+            <input id="ValidTo" type="date" class="form-control" required />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select id="Status" class="form-select">
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
+            <option value="PendingVerification">PendingVerification</option>
+            <option value="Revoked">Revoked</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Evidence URL</label>
+        <input id="EvidenceUrl" class="form-control" placeholder="https://..." />
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a href="/UserCredentials/Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+<div id="alert" class="alert mt-3" style="display:none"></div>
+</div></div></div></div></div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const id = '@Model.Id';
+
+        async function load(){
+            try{
+                const res = await fetch(`${apiBaseUrl}/api/UserCredential/${id}`);
+                if(!res.ok) throw new Error('Failed to load credential');
+                const d = await res.json();
+                document.getElementById('UserId').value = d.userId || '';
+                document.getElementById('UserNameDisplay').value = d.user?.fullName || d.userName || '';
+                document.getElementById('CredentialType').value = d.credentialType || '';
+                document.getElementById('RegistrationNumber').value = d.registrationNumber || '';
+                document.getElementById('SetaBodyId').value = d.setaBodyId ?? '';
+                document.getElementById('Scope').value = d.scope || '';
+                // convert to yyyy-MM-dd for date inputs
+                if (d.validFrom) document.getElementById('ValidFrom').value = new Date(d.validFrom).toISOString().slice(0,10);
+                if (d.validTo) document.getElementById('ValidTo').value = new Date(d.validTo).toISOString().slice(0,10);
+                document.getElementById('Status').value = d.status || 'Active';
+                document.getElementById('EvidenceUrl').value = d.evidenceUrl || '';
+            } catch(err) { showAlert(err.message || 'Error','danger'); }
+        }
+
+        document.getElementById('form').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const rawSeta = document.getElementById('SetaBodyId').value;
+            const setaBodyId = rawSeta === '' ? null : parseInt(rawSeta, 10);
+
+            const payload = {
+                id: parseInt(id,10),
+                userId: parseInt(document.getElementById('UserId').value,10),
+                credentialType: document.getElementById('CredentialType').value.trim(),
+                registrationNumber: document.getElementById('RegistrationNumber').value.trim(),
+                setaBodyId: setaBodyId,
+                scope: document.getElementById('Scope').value.trim(),
+                validFrom: document.getElementById('ValidFrom').value,
+                validTo: document.getElementById('ValidTo').value,
+                status: document.getElementById('Status').value,
+                evidenceUrl: document.getElementById('EvidenceUrl').value.trim()
+            };
+
+            try{
+                const res = await fetch(`${apiBaseUrl}/api/UserCredential/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`Status ${res.status}: ${txt}`);
+                }
+                showAlert('Saved','success');
+                setTimeout(()=>window.location.href='/UserCredentials/Index',700);
+            } catch(err) { showAlert(err.message || 'Error saving','danger'); }
+        });
+
+        function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; setTimeout(()=>a.style.display='none',4000); }
+        document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

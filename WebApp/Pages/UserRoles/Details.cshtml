@@ -1,0 +1,27 @@
+@page "{id:int}"
+@model WebApp.Pages.UserRoles.DetailsModel
+@{
+    ViewData["Title"] = "Role Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Role Details</h2>
+        <div>
+            <a href="/UserRoles/Edit/@Model.Id" class="btn btn-primary">Edit</a>
+            <a href="/UserRoles/Index" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+    <div class="card"><div class="card-body">
+        <div class="row mb-3"><div class="col-md-3"><strong>ID</strong></div><div class="col-md-9">@Model.Id</div></div>
+    <div class="row mb-3"><div class="col-md-3"><strong>Code</strong></div><div class="col-md-9" id="codeCell"></div></div>
+    <div class="row mb-3"><div class="col-md-3"><strong>Name</strong></div><div class="col-md-9" id="nameCell"></div></div>
+    </div></div>
+    <div id="alert" class="alert mt-3" style="display:none"></div>
+</div>
+
+@section Scripts {
+    <script>
+    const apiBaseUrl='@Configuration["ApiSettings:BaseUrl"]'; const id='@Model.Id'; async function load(){ try{ const res=await fetch(`${apiBaseUrl}/api/UserRole/${id}`); if(!res.ok) throw new Error('Failed to load role'); const d=await res.json(); document.getElementById('codeCell').textContent = d.code || ''; document.getElementById('nameCell').textContent=d.name||''; }catch(err){ showAlert(err.message||'Error','danger'); } } function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; setTimeout(()=>a.style.display='none',4000); } document.addEventListener('DOMContentLoaded', load);
+    </script>
+}

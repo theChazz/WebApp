@@ -1,0 +1,309 @@
+@page
+@model WebApp.Pages.SetaBodies.IndexModel
+@{
+    ViewData["Title"] = "SETA Bodies";
+}
+
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-sitemap text-info me-2"></i>SETA Bodies
+            </h2>
+            <p class="text-muted mb-0">Standards Education and Training Authorities</p>
+        </div>
+        <a href="/SetaBodies/Create" class="btn btn-info">
+            <i class="fas fa-plus"></i> Create New SETA Body
+        </a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total SETA Bodies</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalBodies">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-sitemap fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Unique Codes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="uniqueCodes">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-barcode fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">With Names</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="withNames">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-secondary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Last Updated</div>
+                            <div class="h6 mb-0 text-muted" id="lastUpdated">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by code or name...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Code starts with</label>
+                    <input type="text" class="form-control" id="codeStarts" maxlength="5" placeholder="e.g. MICT">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                        <i class="fas fa-search"></i> Search & Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="d-flex justify-content-end mb-3" style="position: sticky; top: 20px; z-index: 100;">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-info" id="gridViewBtn">
+                <i class="fas fa-th"></i> Grid View
+            </button>
+            <button type="button" class="btn btn-outline-info active" id="listViewBtn">
+                <i class="fas fa-list"></i> List View
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="row d-none" id="bodiesGrid"></div>
+
+    <!-- List -->
+    <div class="card" id="listView">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodiesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="alert" class="alert mt-3" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        let allBodies = [];
+        let filteredBodies = [];
+
+        async function loadBodies() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/SetaBody`);
+                if (!response.ok) throw new Error('Failed to fetch SETA bodies');
+
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
+                    allBodies = data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    allBodies = data.data;
+                } else if (data.items && Array.isArray(data.items)) {
+                    allBodies = data.items;
+                } else {
+                    allBodies = [];
+                }
+
+                filteredBodies = [...allBodies];
+                updateStatistics(filteredBodies);
+                displayBodies(filteredBodies);
+            } catch (error) {
+                console.error(error);
+                showAlert(error.message || 'Failed to load SETA bodies', 'danger');
+            }
+        }
+
+        function updateStatistics(items) {
+            document.getElementById('totalBodies').textContent = items.length;
+            const codes = new Set(items.map(x => (x.code ?? x.Code ?? '').trim()).filter(Boolean));
+            document.getElementById('uniqueCodes').textContent = codes.size;
+            const withNames = items.filter(x => (x.name ?? x.Name ?? '').trim()).length;
+            document.getElementById('withNames').textContent = withNames;
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+        }
+
+        function displayBodies(items) {
+            displayGridView(items);
+            displayTableView(items);
+        }
+
+        function displayGridView(items) {
+            const grid = document.getElementById('bodiesGrid');
+            grid.innerHTML = items.map(x => `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">${escapeHtml(x.name ?? x.Name ?? '-')}</h5>
+                                <span class="badge bg-secondary">${escapeHtml(x.code ?? x.Code ?? 'N/A')}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">SETA Body</small>
+                                <div class="btn-group" role="group">
+                                    <a href="/SetaBodies/Details/${x.id ?? x.Id}" class="btn btn-outline-info btn-sm"><i class="fas fa-eye"></i></a>
+                                    <a href="/SetaBodies/Edit/${x.id ?? x.Id}" class="btn btn-outline-primary btn-sm"><i class="fas fa-edit"></i></a>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteBody(${x.id ?? x.Id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayTableView(items) {
+            const body = document.getElementById('bodiesTableBody');
+            body.innerHTML = items.map(x => `
+                <tr>
+                    <td>${escapeHtml(x.code ?? x.Code ?? '-')}</td>
+                    <td>${escapeHtml(x.name ?? x.Name ?? '-')}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="/SetaBodies/Details/${x.id ?? x.Id}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> View</a>
+                            <a href="/SetaBodies/Edit/${x.id ?? x.Id}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBody(${x.id ?? x.Id})"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const codeStarts = document.getElementById('codeStarts').value.toLowerCase();
+
+            filteredBodies = allBodies.filter(x => {
+                const code = (x.code ?? x.Code ?? '').toString();
+                const name = (x.name ?? x.Name ?? '').toString();
+                const matchesTerm = !term || code.toLowerCase().includes(term) || name.toLowerCase().includes(term);
+                const matchesCode = !codeStarts || code.toLowerCase().startsWith(codeStarts);
+                return matchesTerm && matchesCode;
+            });
+
+            displayBodies(filteredBodies);
+            updateStatistics(filteredBodies);
+        }
+
+        function toggleView(viewType) {
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            const listViewBtn = document.getElementById('listViewBtn');
+            const grid = document.getElementById('bodiesGrid');
+            const list = document.getElementById('listView');
+
+            if (viewType === 'grid') {
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                grid.classList.remove('d-none');
+                list.classList.add('d-none');
+            } else {
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+                grid.classList.add('d-none');
+                list.classList.remove('d-none');
+            }
+        }
+
+        async function deleteBody(id) {
+            if (!confirm('Are you sure you want to delete this SETA body?')) return;
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/SetaBody/${id}`, { method: 'DELETE' });
+                if (!response.ok) {
+                    let msg = 'Failed to delete SETA body';
+                    try { const e = await response.json(); msg = e.message || e.title || msg; } catch {}
+                    throw new Error(msg);
+                }
+                const text = await response.text();
+                if (response.status === 204 || !text) {
+                    showAlert('SETA body deleted successfully!', 'success');
+                } else {
+                    try { const result = JSON.parse(text); showAlert(result.message || 'SETA body deleted successfully!', 'success'); } catch { showAlert('SETA body deleted successfully! (non-JSON response)', 'success'); }
+                }
+                loadBodies();
+            } catch (error) {
+                console.error(error);
+                showAlert(error.message || 'Failed to delete SETA body', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => { alert.style.display = 'none'; }, 5000);
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadBodies();
+            toggleView('list');
+            document.getElementById('searchInput').addEventListener('input', function(){ clearTimeout(this.t); this.t = setTimeout(applyFilters, 300); });
+            document.getElementById('codeStarts').addEventListener('input', function(){ clearTimeout(this.t); this.t = setTimeout(applyFilters, 300); });
+            document.getElementById('gridViewBtn').addEventListener('click', () => toggleView('grid'));
+            document.getElementById('listViewBtn').addEventListener('click', () => toggleView('list'));
+        });
+    </script>
+}

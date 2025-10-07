@@ -1,0 +1,28 @@
+@page
+@model WebApp.Pages.UserRoles.CreateModel
+@{
+    ViewData["Title"] = "Create User Role";
+}
+
+<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-8"><div class="card">
+<div class="card-header"><h4><i class="fas fa-plus"></i> Create Role</h4></div>
+<div class="card-body">
+<form id="form"><div class="mb-3"><label class="form-label">Code</label><input id="Code" class="form-control" required /></div>
+<div class="mb-3"><label class="form-label">Name</label><input id="Name" class="form-control" required /></div>
+<button class="btn btn-primary">Create</button></form>
+<div id="alert" class="alert mt-3" style="display:none"></div>
+</div></div></div></div></div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        document.getElementById('form').addEventListener('submit', async (e)=>{ e.preventDefault(); const payload={ code: document.getElementById('Code').value.trim(), name: document.getElementById('Name').value.trim() }; try{ const res=await fetch(`${apiBaseUrl}/api/UserRole`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); if(!res.ok) {
+                        let msg = 'Failed to create role';
+                        try { const err = await res.json(); msg = err.message || err.title || msg; } catch(e){}
+                        throw new Error(msg);
+                    }
+                    showAlert('Created','success'); setTimeout(()=>window.location.href='/UserRoles/Index',700);
+                }catch(err){ showAlert(err.message||'Error','danger'); } });
+        function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; setTimeout(()=>a.style.display='none',4000); }
+    </script>
+}

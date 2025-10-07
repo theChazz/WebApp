@@ -1,0 +1,977 @@
+@page
+@model WebApp.Pages.Submissions.EditModel
+@{
+    ViewData["Title"] = "Edit Submission";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <!-- Loading State -->
+    <div class="text-center py-5" id="loadingState">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading submission...</span>
+        </div>
+        <p class="text-muted mt-2">Loading submission details...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row" id="contentArea" style="display: none;">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-edit text-primary me-2"></i>
+                        Edit Submission
+                    </h2>
+                    <p class="text-muted mb-0" id="submissionInfo">Modify submission details and content</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/Submissions" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to List
+                    </a>
+                    <a href="#" id="viewDetailsLink" class="btn btn-outline-info">
+                        <i class="fas fa-eye me-1"></i>
+                        View Details
+                    </a>
+                </div>
+            </div>
+
+            <form id="submissionForm" enctype="multipart/form-data">
+                <input type="hidden" id="submissionId" value="@Model.Id">
+
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Submission Details
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Student</label>
+                                <select class="form-select" asp-for="Input.StudentId" id="studentSelect" required>
+                                    <option value="">Select a student...</option>
+                                </select>
+                                <span asp-validation-for="Input.StudentId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Assessment</label>
+                                <select class="form-select" asp-for="Input.AssessmentId" id="assessmentSelect" required>
+                                    <option value="">Select an assessment...</option>
+                                </select>
+                                <span asp-validation-for="Input.AssessmentId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Assessment Details -->
+                        <div id="assessmentDetails" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2">
+                                        <h6 class="alert-heading mb-1">Assessment Information</h6>
+                                        <div id="assessmentInfo">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-12">
+                                <label class="form-label">Submission Text</label>
+                                <textarea class="form-control" asp-for="Input.SubmissionText" id="submissionTextArea" rows="8" 
+                                         placeholder="Enter your submission text here..."></textarea>
+                                <span asp-validation-for="Input.SubmissionText" class="text-danger"></span>
+                                <div class="form-text">Written content of the submission</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Files -->
+                <div class="card mt-4" id="existingFilesCard" style="display: none;">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-paperclip me-2"></i>
+                            Current Files
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="existingFilesList" class="list-group list-group-flush">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Files -->
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-plus me-2"></i>
+                            Add New Files
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Upload Additional Files</label>
+                            <input type="file" class="form-control" asp-for="Input.AdditionalFiles" multiple 
+                                   accept=".pdf,.doc,.docx,.txt,.zip,.jpg,.jpeg,.png,.gif" id="newFilesInput">
+                            <div class="form-text">
+                                Supported formats: PDF, Word documents, text files, images, and ZIP archives. 
+                                Maximum file size: 10MB per file.
+                            </div>
+                        </div>
+
+                        <!-- New File Preview -->
+                        <div id="newFilePreview" class="mt-3" style="display: none;">
+                            <h6 class="fw-semibold mb-2">New Files to Upload:</h6>
+                            <div id="newFilesList" class="list-group">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-cog me-2"></i>
+                            Submission Options
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" asp-for="Input.SubmissionStatus" id="statusSelect">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Submitted">Submitted</option>
+                                    <option value="Resubmitted">Resubmitted</option>
+                                </select>
+                                <div class="form-text">Update the submission status</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="Input.AllowLateSubmission" id="allowLate">
+                                        <label class="form-check-label" for="allowLate">
+                                            Allow Late Submission
+                                        </label>
+                                        <div class="form-text">Submit even if past due date</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" asp-for="Input.Notes" id="notesTextArea" rows="3" 
+                                     placeholder="Additional notes or comments..."></textarea>
+                            <div class="form-text">Optional notes for instructors or personal reference</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission History -->
+                <div class="card mt-4" id="historyCard">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-history me-2"></i>
+                            Submission History
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="submissionHistory">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save me-1"></i>
+                        Save Changes
+                    </button>
+                    <button type="button" class="btn btn-success" id="saveAndSubmitBtn" style="display: none;">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Save & Submit
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Submissions'">
+                        <i class="fas fa-times me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="deleteBtn">
+                        <i class="fas fa-trash me-1"></i>
+                        Delete Submission
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Student Information Panel -->
+            <div class="card" id="studentInfoPanel" style="display: none;">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Student Information
+                    </h6>
+                </div>
+                <div class="card-body" id="studentInfo">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Current Grade -->
+            <div class="card mt-4" id="gradeCard" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Current Grade
+                    </h6>
+                </div>
+                <div class="card-body text-center" id="gradeInfo">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Edit Guidelines -->
+            <div class="card mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Edit Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            Changes will update the submission
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-warning me-2"></i>
+                            Status changes affect grading workflow
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-file text-primary me-2"></i>
+                            Existing files can be removed
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-plus text-success me-2"></i>
+                            New files can be added
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-save text-secondary me-2"></i>
+                            Remember to save your changes
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Last Modified -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Last Modified
+                    </h6>
+                </div>
+                <div class="card-body" id="lastModified">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="text-center py-5" id="errorState" style="display: none;">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+        <h5 class="text-muted">Submission Not Found</h5>
+        <p class="text-muted">The requested submission could not be found or you don't have permission to edit it.</p>
+        <a href="/Submissions" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back to Submissions
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        class SubmissionEditor {
+            constructor() {
+                this.apiBaseUrl = '@Model.ApiBaseUrl';
+                this.submissionId = @Model.Id;
+                this.submission = null;
+                this.students = [];
+                this.assessments = [];
+                this.filesToRemove = [];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadSubmission();
+                this.loadDropdownData();
+            }
+
+            bindEvents() {
+                // Student selection
+                document.getElementById('studentSelect').addEventListener('change', (e) => {
+                    this.onStudentSelected(e.target.value);
+                });
+
+                // Assessment selection
+                document.getElementById('assessmentSelect').addEventListener('change', (e) => {
+                    this.onAssessmentSelected(e.target.value);
+                });
+
+                // Status change
+                document.getElementById('statusSelect').addEventListener('change', (e) => {
+                    this.updateSubmitButton(e.target.value);
+                });
+
+                // Form submission
+                document.getElementById('submissionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSubmission(false);
+                });
+
+                // Save and submit button
+                document.getElementById('saveAndSubmitBtn').addEventListener('click', () => {
+                    this.saveSubmission(true);
+                });
+
+                // Delete button
+                document.getElementById('deleteBtn').addEventListener('click', () => {
+                    this.deleteSubmission();
+                });
+
+                // File input change
+                document.getElementById('newFilesInput').addEventListener('change', (e) => {
+                    this.previewNewFiles(e.target.files);
+                });
+            }
+
+            async loadSubmission() {
+                try {
+                    document.getElementById('loadingState').style.display = 'block';
+                    document.getElementById('contentArea').style.display = 'none';
+                    document.getElementById('errorState').style.display = 'none';
+
+                    const response = await apiUtils.get(`${this.apiBaseUrl}/api/Submissions/${this.submissionId}`);
+                    
+                    if (response.ok) {
+                        this.submission = await response.json();
+                        this.populateForm();
+                        document.getElementById('contentArea').style.display = 'block';
+                    } else if (response.status === 404) {
+                        document.getElementById('errorState').style.display = 'block';
+                    } else {
+                        throw new Error('Failed to load submission');
+                    }
+                } catch (error) {
+                    console.error('Error loading submission:', error);
+                    document.getElementById('errorState').style.display = 'block';
+                } finally {
+                    document.getElementById('loadingState').style.display = 'none';
+                }
+            }
+
+            async loadDropdownData() {
+                try {
+                    // Load students
+                    const studentsResponse = await apiUtils.get(`${this.apiBaseUrl}/api/Users?role=Student&pageSize=1000`);
+                    if (studentsResponse.ok) {
+                        const studentsData = await studentsResponse.json();
+                        this.students = studentsData.items || [];
+                        this.populateStudentDropdown();
+                    }
+
+                    // Load assessments
+                    const assessmentsResponse = await apiUtils.get(`${this.apiBaseUrl}/api/Assessments?pageSize=1000`);
+                    if (assessmentsResponse.ok) {
+                        const assessmentsData = await assessmentsResponse.json();
+                        this.assessments = assessmentsData.items || [];
+                        this.populateAssessmentDropdown();
+                    }
+                } catch (error) {
+                    console.error('Error loading dropdown data:', error);
+                }
+            }
+
+            populateStudentDropdown() {
+                const select = document.getElementById('studentSelect');
+                
+                // Clear existing options except the first one
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                this.students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.firstName} ${student.lastName} (${student.email})`;
+                    select.appendChild(option);
+                });
+
+                // Set current value if submission is loaded
+                if (this.submission) {
+                    select.value = this.submission.student.id;
+                    this.onStudentSelected(this.submission.student.id);
+                }
+            }
+
+            populateAssessmentDropdown() {
+                const select = document.getElementById('assessmentSelect');
+                
+                // Clear existing options except the first one
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                this.assessments.forEach(assessment => {
+                    const option = document.createElement('option');
+                    option.value = assessment.id;
+                    option.textContent = `${assessment.title} (${assessment.course?.title})`;
+                    select.appendChild(option);
+                });
+
+                // Set current value if submission is loaded
+                if (this.submission) {
+                    select.value = this.submission.assessment.id;
+                    this.onAssessmentSelected(this.submission.assessment.id);
+                }
+            }
+
+            populateForm() {
+                // Update page info
+                const submissionInfo = `${this.submission.student.firstName} ${this.submission.student.lastName} - ${this.submission.assessment.title}`;
+                document.getElementById('submissionInfo').textContent = submissionInfo;
+                document.getElementById('viewDetailsLink').href = `/Submissions/Details/${this.submissionId}`;
+
+                // Populate form fields
+                document.getElementById('submissionTextArea').value = this.submission.submissionText || '';
+                document.getElementById('statusSelect').value = this.submission.submissionStatus;
+                document.getElementById('notesTextArea').value = this.submission.notes || '';
+                document.getElementById('allowLate').checked = this.submission.allowLateSubmission || false;
+
+                // Show existing files
+                this.renderExistingFiles();
+                
+                // Show student info
+                this.displayStudentInfo(this.submission.student);
+                
+                // Show grade if exists
+                this.displayGradeInfo();
+                
+                // Show history
+                this.renderSubmissionHistory();
+                
+                // Show last modified
+                this.renderLastModified();
+
+                // Update button state
+                this.updateSubmitButton();
+            }
+
+            renderExistingFiles() {
+                const card = document.getElementById('existingFilesCard');
+                const container = document.getElementById('existingFilesList');
+                
+                if (this.submission.files && this.submission.files.length > 0) {
+                    container.innerHTML = this.submission.files.map(file => `
+                        <div class="list-group-item d-flex justify-content-between align-items-center" data-file-id="${file.id}">
+                            <div class="d-flex align-items-center">
+                                <i class="${this.getFileIcon(file.contentType)} me-3"></i>
+                                <div>
+                                    <div class="fw-semibold">${file.originalFileName}</div>
+                                    <small class="text-muted">
+                                        ${this.formatFileSize(file.fileSize)} • 
+                                        Uploaded ${this.formatDate(file.uploadedAt)}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" onclick="downloadFile(${file.id})">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="markFileForRemoval(${file.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+
+            onStudentSelected(studentId) {
+                if (!studentId) {
+                    document.getElementById('studentInfoPanel').style.display = 'none';
+                    return;
+                }
+
+                const student = this.students.find(s => s.id == studentId);
+                if (student) {
+                    this.displayStudentInfo(student);
+                }
+            }
+
+            displayStudentInfo(student) {
+                const panel = document.getElementById('studentInfoPanel');
+                const infoDiv = document.getElementById('studentInfo');
+                
+                infoDiv.innerHTML = `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar avatar-lg bg-primary text-white rounded-circle me-3">
+                            ${student.firstName.charAt(0)}${student.lastName.charAt(0)}
+                        </div>
+                        <div>
+                            <h6 class="mb-1">${student.firstName} ${student.lastName}</h6>
+                            <small class="text-muted">${student.email}</small>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Student ID:</small>
+                        <div class="fw-semibold">${student.id}</div>
+                    </div>
+                    ${student.program ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Program:</small>
+                            <div class="fw-semibold">${student.program}</div>
+                        </div>
+                    ` : ''}
+                    <div class="mt-3">
+                        <a href="/Users/Details/${student.id}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="fas fa-user me-1"></i>
+                            View Profile
+                        </a>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            onAssessmentSelected(assessmentId) {
+                if (!assessmentId) {
+                    document.getElementById('assessmentDetails').style.display = 'none';
+                    return;
+                }
+
+                const assessment = this.assessments.find(a => a.id == assessmentId);
+                if (assessment) {
+                    this.displayAssessmentInfo(assessment);
+                }
+            }
+
+            displayAssessmentInfo(assessment) {
+                const panel = document.getElementById('assessmentDetails');
+                const infoDiv = document.getElementById('assessmentInfo');
+                
+                const dueDate = new Date(assessment.dueDate);
+                const isOverdue = dueDate < new Date();
+                
+                infoDiv.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <strong>Title:</strong> ${assessment.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Course:</strong> ${assessment.course?.title}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Type:</strong> ${assessment.assessmentType}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Points:</strong> ${assessment.totalPoints}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Due Date:</strong> 
+                            <span class="text-${isOverdue ? 'danger' : 'success'}">
+                                ${this.formatDate(assessment.dueDate)}
+                                ${isOverdue ? '(Overdue)' : ''}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-${assessment.isPublished ? 'success' : 'warning'}">
+                                ${assessment.isPublished ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            displayGradeInfo() {
+                const card = document.getElementById('gradeCard');
+                const infoDiv = document.getElementById('gradeInfo');
+                
+                if (this.submission.grade !== null) {
+                    infoDiv.innerHTML = `
+                        <div class="h2 text-${this.submission.grade >= 70 ? 'success' : this.submission.grade >= 50 ? 'warning' : 'danger'} mb-1">
+                            ${this.submission.grade}%
+                        </div>
+                        <div class="text-muted">Current Grade</div>
+                        ${this.submission.gradedAt ? `
+                            <small class="text-muted">
+                                Graded on ${this.formatDate(this.submission.gradedAt)}
+                            </small>
+                        ` : ''}
+                    `;
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+
+            renderSubmissionHistory() {
+                const container = document.getElementById('submissionHistory');
+                const events = [
+                    {
+                        date: this.submission.createdAt,
+                        event: 'Submission Created',
+                        icon: 'fas fa-plus-circle',
+                        color: 'primary'
+                    },
+                    {
+                        date: this.submission.submittedAt,
+                        event: 'Submitted',
+                        icon: 'fas fa-paper-plane',
+                        color: 'success'
+                    }
+                ];
+
+                if (this.submission.lastModifiedAt && this.submission.lastModifiedAt !== this.submission.createdAt) {
+                    events.push({
+                        date: this.submission.lastModifiedAt,
+                        event: 'Last Modified',
+                        icon: 'fas fa-edit',
+                        color: 'info'
+                    });
+                }
+
+                if (this.submission.gradedAt) {
+                    events.push({
+                        date: this.submission.gradedAt,
+                        event: 'Graded',
+                        icon: 'fas fa-star',
+                        color: 'warning'
+                    });
+                }
+
+                // Sort by date descending
+                events.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                container.innerHTML = events.map(event => `
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="flex-shrink-0 me-2">
+                            <i class="${event.icon} text-${event.color}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${event.event}</div>
+                            <small class="text-muted">${this.formatDate(event.date)}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderLastModified() {
+                const container = document.getElementById('lastModified');
+                const lastModified = this.submission.lastModifiedAt || this.submission.createdAt;
+                
+                container.innerHTML = `
+                    <div class="text-center">
+                        <div class="fw-semibold">${this.formatDate(lastModified)}</div>
+                        <small class="text-muted">Last Updated</small>
+                    </div>
+                `;
+            }
+
+            previewNewFiles(files) {
+                const preview = document.getElementById('newFilePreview');
+                const fileList = document.getElementById('newFilesList');
+                
+                if (files.length === 0) {
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+                Array.from(files).forEach((file, index) => {
+                    const sizeText = this.formatFileSize(file.size);
+                    const icon = this.getFileIcon(file.type);
+                    
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="${icon} me-2"></i>
+                                <div>
+                                    <div class="fw-semibold">${file.name}</div>
+                                    <small class="text-muted">${sizeText}</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeNewFile(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+
+                fileList.innerHTML = html;
+                preview.style.display = 'block';
+            }
+
+            updateSubmitButton(status = null) {
+                const currentStatus = status || document.getElementById('statusSelect').value;
+                const saveBtn = document.getElementById('saveBtn');
+                const saveAndSubmitBtn = document.getElementById('saveAndSubmitBtn');
+
+                if (currentStatus === 'Submitted' || currentStatus === 'Resubmitted') {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save & Submit';
+                    saveBtn.className = 'btn btn-success';
+                    saveAndSubmitBtn.style.display = 'none';
+                } else {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Changes';
+                    saveBtn.className = 'btn btn-primary';
+                    saveAndSubmitBtn.style.display = 'inline-block';
+                }
+            }
+
+            async saveSubmission(submitImmediately = false) {
+                try {
+                    if (!this.validateForm()) return;
+
+                    const formData = new FormData();
+                    
+                    // Add form fields
+                    formData.append('Id', this.submissionId);
+                    formData.append('StudentId', document.getElementById('studentSelect').value);
+                    formData.append('AssessmentId', document.getElementById('assessmentSelect').value);
+                    formData.append('SubmissionText', document.getElementById('submissionTextArea').value || '');
+                    formData.append('Notes', document.getElementById('notesTextArea').value || '');
+                    
+                    // Set status
+                    let status = document.getElementById('statusSelect').value;
+                    if (submitImmediately && (status === 'Draft')) {
+                        status = this.submission.submissionStatus === 'Submitted' ? 'Resubmitted' : 'Submitted';
+                    }
+                    formData.append('SubmissionStatus', status);
+                    
+                    formData.append('AllowLateSubmission', document.getElementById('allowLate').checked);
+
+                    // Add new files
+                    const fileInput = document.getElementById('newFilesInput');
+                    if (fileInput.files) {
+                        Array.from(fileInput.files).forEach(file => {
+                            formData.append('additionalFiles', file);
+                        });
+                    }
+
+                    // Add files to remove
+                    this.filesToRemove.forEach(fileId => {
+                        formData.append('filesToRemove', fileId);
+                    });
+
+                    // Show loading state
+                    const submitBtn = submitImmediately ? document.getElementById('saveAndSubmitBtn') : document.getElementById('saveBtn');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+                    submitBtn.disabled = true;
+
+                    const response = await fetch(`${this.apiBaseUrl}/api/Submissions/${this.submissionId}`, {
+                        method: 'PUT',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        this.showSuccess('Submission updated successfully!');
+                        
+                        // Reload submission data
+                        setTimeout(() => {
+                            this.loadSubmission();
+                        }, 1000);
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to update submission');
+                    }
+                } catch (error) {
+                    console.error('Error updating submission:', error);
+                    this.showError(error.message || 'Failed to update submission');
+                    
+                    // Reset button state
+                    const submitBtn = submitImmediately ? document.getElementById('saveAndSubmitBtn') : document.getElementById('saveBtn');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
+
+            validateForm() {
+                const studentId = document.getElementById('studentSelect').value;
+                const assessmentId = document.getElementById('assessmentSelect').value;
+
+                if (!studentId) {
+                    this.showError('Please select a student');
+                    return false;
+                }
+
+                if (!assessmentId) {
+                    this.showError('Please select an assessment');
+                    return false;
+                }
+
+                return true;
+            }
+
+            async deleteSubmission() {
+                if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
+                    return;
+                }
+
+                try {
+                    const response = await apiUtils.delete(`${this.apiBaseUrl}/api/Submissions/${this.submissionId}`);
+                    
+                    if (response.ok) {
+                        this.showSuccess('Submission deleted successfully');
+                        setTimeout(() => {
+                            window.location.href = '/Submissions';
+                        }, 1500);
+                    } else {
+                        throw new Error('Failed to delete submission');
+                    }
+                } catch (error) {
+                    console.error('Error deleting submission:', error);
+                    this.showError('Failed to delete submission');
+                }
+            }
+
+            getFileIcon(mimeType) {
+                if (mimeType?.includes('pdf')) return 'fas fa-file-pdf text-danger';
+                if (mimeType?.includes('word') || mimeType?.includes('msword')) return 'fas fa-file-word text-primary';
+                if (mimeType?.includes('text')) return 'fas fa-file-alt text-secondary';
+                if (mimeType?.includes('image')) return 'fas fa-file-image text-success';
+                if (mimeType?.includes('zip') || mimeType?.includes('archive')) return 'fas fa-file-archive text-warning';
+                return 'fas fa-file text-muted';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            showSuccess(message) {
+                // Implement toast notification
+                console.log('Success:', message);
+                // You can integrate with your existing notification system
+            }
+
+            showError(message) {
+                // Implement toast notification
+                console.error('Error:', message);
+                alert(message); // Temporary - replace with proper toast
+            }
+        }
+
+        // Global functions
+        function markFileForRemoval(fileId) {
+            if (confirm('Are you sure you want to remove this file?')) {
+                submissionEditor.filesToRemove.push(fileId);
+                const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+                if (fileElement) {
+                    fileElement.style.opacity = '0.5';
+                    fileElement.style.textDecoration = 'line-through';
+                    const removeBtn = fileElement.querySelector('.btn-outline-danger');
+                    removeBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                    removeBtn.onclick = () => undoFileRemoval(fileId);
+                }
+            }
+        }
+
+        function undoFileRemoval(fileId) {
+            const index = submissionEditor.filesToRemove.indexOf(fileId);
+            if (index > -1) {
+                submissionEditor.filesToRemove.splice(index, 1);
+                const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+                if (fileElement) {
+                    fileElement.style.opacity = '1';
+                    fileElement.style.textDecoration = 'none';
+                    const removeBtn = fileElement.querySelector('.btn-outline-danger');
+                    removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    removeBtn.onclick = () => markFileForRemoval(fileId);
+                }
+            }
+        }
+
+        function removeNewFile(index) {
+            const fileInput = document.getElementById('newFilesInput');
+            const dt = new DataTransfer();
+            const files = Array.from(fileInput.files);
+            
+            files.splice(index, 1);
+            files.forEach(file => dt.items.add(file));
+            
+            fileInput.files = dt.files;
+            submissionEditor.previewNewFiles(fileInput.files);
+        }
+
+        async function downloadFile(fileId) {
+            try {
+                const response = await apiUtils.get(`${submissionEditor.apiBaseUrl}/api/Files/${fileId}/download`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const disposition = response.headers.get('Content-Disposition');
+                    const filename = disposition?.match(/filename="(.+)"/)?.[1] || `file_${fileId}`;
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Failed to download file');
+                }
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                submissionEditor.showError('Failed to download file');
+            }
+        }
+
+        // Initialize when DOM is ready
+        let submissionEditor;
+        document.addEventListener('DOMContentLoaded', function() {
+            submissionEditor = new SubmissionEditor();
+        });
+    </script>
+}

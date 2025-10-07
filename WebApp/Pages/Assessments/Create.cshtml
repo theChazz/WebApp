@@ -1,0 +1,368 @@
+@page
+@model WebApp.Pages.Assessments.CreateModel
+@{
+    ViewData["Title"] = "Create Assessment";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-plus"></i> Create New Assessment</h3>
+                </div>
+                <div class="card-body">
+                    <form id="createAssessmentForm">
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="courseId" class="form-label">Course <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="courseSearch" placeholder="Search for course..." required>
+                                    <input type="hidden" id="courseId" name="courseId" required>
+                                    <div id="courseSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; display:none;"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Assessment Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="title" name="title" maxlength="200" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" maxlength="1000"></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="assessmentTypeId" class="form-label">Assessment Type <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="assessmentTypeId" name="assessmentTypeId" required>
+                                                <option value="">Select Type</option>
+                                                <option value="1">Quiz</option>
+                                                <option value="2">Assignment</option>
+                                                <option value="3">Exam</option>
+                                                <option value="4">Project</option>
+                                                <option value="5">Test</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="assessmentCategoryId" class="form-label">Category <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="assessmentCategoryId" name="assessmentCategoryId" required>
+                                                <option value="">Select Category</option>
+                                                <option value="1">Formative</option>
+                                                <option value="2">Summative</option>
+                                                <option value="3">Diagnostic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="maxMarks" class="form-label">Max Marks <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="maxMarks" name="maxMarks" min="1" max="1000" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="duration" class="form-label">Duration (minutes)</label>
+                                            <input type="number" class="form-control" id="duration" name="duration" min="1" max="600">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="attemptsAllowed" class="form-label">Attempts Allowed</label>
+                                            <input type="number" class="form-control" id="attemptsAllowed" name="attemptsAllowed" min="1" max="10" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="weightingPercentage" class="form-label">Weighting Percentage <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="weightingPercentage" name="weightingPercentage" min="0" max="100" step="0.1" required>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="openDate" class="form-label">Open Date</label>
+                                    <input type="datetime-local" class="form-control" id="openDate" name="openDate">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">Due Date</label>
+                                    <input type="datetime-local" class="form-control" id="dueDate" name="dueDate">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="closeDate" class="form-label">Close Date</label>
+                                    <input type="datetime-local" class="form-control" id="closeDate" name="closeDate">
+                                </div>
+
+                                <!-- Moderation Settings -->
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Moderation Settings</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="requiresModeration" name="requiresModeration">
+                                            <label class="form-check-label" for="requiresModeration">
+                                                Requires Moderation
+                                            </label>
+                                        </div>
+
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="requiresExternalModeration" name="requiresExternalModeration">
+                                            <label class="form-check-label" for="requiresExternalModeration">
+                                                Requires External Moderation
+                                            </label>
+                                        </div>
+
+                                        <div class="mb-3" id="moderationPercentageDiv" style="display: none;">
+                                            <label for="moderationPercentage" class="form-label">Moderation Percentage</label>
+                                            <input type="number" class="form-control" id="moderationPercentage" name="moderationPercentage" min="0" max="100" step="1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="Draft" selected>Draft</option>
+                                        <option value="Active">Active</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="instructions" class="form-label">Instructions/Additional Info</label>
+                                    <textarea class="form-control" id="instructions" name="instructions" rows="4" maxlength="2000"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/Assessments" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Assessment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="alert" class="alert mt-3" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        // Course search with autocomplete
+        let courseSearchTimeout;
+        document.getElementById('courseSearch').addEventListener('input', function() {
+            clearTimeout(courseSearchTimeout);
+            courseSearchTimeout = setTimeout(() => {
+                searchCourses(this.value);
+            }, 300);
+        });
+
+        async function searchCourses(term) {
+            const list = document.getElementById('courseSuggestions');
+            if (!term || term.length < 2) {
+                list.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Course`);
+                if (!response.ok) return;
+
+                const courses = await response.json();
+                const filtered = courses.filter(c => 
+                    c.courseName?.toLowerCase().includes(term.toLowerCase())
+                ).slice(0, 10);
+
+                list.innerHTML = filtered.map(c =>
+                    `<button type="button" class="list-group-item list-group-item-action"
+                             data-id="${c.id}" data-name="${c.courseName}">${c.courseName}</button>`
+                ).join('');
+                list.style.display = filtered.length ? 'block' : 'none';
+
+                [...list.querySelectorAll('button')].forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.getElementById('courseId').value = btn.getAttribute('data-id');
+                        document.getElementById('courseSearch').value = btn.getAttribute('data-name');
+                        list.style.display = 'none';
+                    });
+                });
+            } catch (error) {
+                console.error('Error searching courses:', error);
+            }
+        }
+
+        // Show/hide moderation percentage based on checkboxes
+        document.getElementById('requiresModeration').addEventListener('change', toggleModerationPercentage);
+        document.getElementById('requiresExternalModeration').addEventListener('change', toggleModerationPercentage);
+
+        function toggleModerationPercentage() {
+            const requiresModeration = document.getElementById('requiresModeration').checked;
+            const requiresExternalModeration = document.getElementById('requiresExternalModeration').checked;
+            const moderationPercentageDiv = document.getElementById('moderationPercentageDiv');
+            
+            if (requiresModeration || requiresExternalModeration) {
+                moderationPercentageDiv.style.display = 'block';
+            } else {
+                moderationPercentageDiv.style.display = 'none';
+                document.getElementById('moderationPercentage').value = '';
+            }
+        }
+
+        // Form validation
+        function validateAssessmentForm() {
+            const form = document.getElementById('createAssessmentForm');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+            
+            // Clear previous validation
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+            
+            // Check required fields
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+
+            // Validate dates
+            const openDate = document.getElementById('openDate').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const closeDate = document.getElementById('closeDate').value;
+
+            if (openDate && dueDate && new Date(dueDate) <= new Date(openDate)) {
+                showAlert('Due date must be after open date', 'danger');
+                document.getElementById('dueDate').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            if (dueDate && closeDate && new Date(closeDate) < new Date(dueDate)) {
+                showAlert('Close date must be after due date', 'danger');
+                document.getElementById('closeDate').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Validate course selection
+            if (!document.getElementById('courseId').value) {
+                showAlert('Please select a course', 'danger');
+                document.getElementById('courseSearch').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Form submission
+        document.getElementById('createAssessmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateAssessmentForm()) {
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            const courseIdValue = document.getElementById('courseId').value;
+            
+            console.log('Course ID value:', courseIdValue);
+            
+            if (!courseIdValue) {
+                showAlert('Please select a course', 'danger');
+                return;
+            }
+            
+            const assessmentData = {
+                courseId: parseInt(courseIdValue),
+                title: formData.get('title'),
+                description: formData.get('description'),
+                assessmentTypeId: parseInt(formData.get('assessmentTypeId')),
+                assessmentCategoryId: parseInt(formData.get('assessmentCategoryId')),
+                maxMarks: parseInt(formData.get('maxMarks')),
+                duration: formData.get('duration') ? parseInt(formData.get('duration')) : 60,
+                attemptsAllowed: parseInt(formData.get('attemptsAllowed')) || 1,
+                weightingPercentage: parseFloat(formData.get('weightingPercentage')),
+                openDate: formData.get('openDate') ? new Date(formData.get('openDate')).toISOString() : null,
+                dueDate: formData.get('dueDate') ? new Date(formData.get('dueDate')).toISOString() : null,
+                closeDate: formData.get('closeDate') ? new Date(formData.get('closeDate')).toISOString() : null,
+                requiresModeration: document.getElementById('requiresModeration').checked,
+                requiresExternalModeration: document.getElementById('requiresExternalModeration').checked,
+                moderationPercentage: formData.get('moderationPercentage') ? parseInt(formData.get('moderationPercentage')) : null,
+                createdBy: 1 // TODO: Get from user session
+            };
+
+            try {
+                console.log('Sending assessment data:', assessmentData);
+                
+                const response = await fetch(`${apiBaseUrl}/api/Assessment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(assessmentData)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { message: errorText };
+                    }
+                    throw new Error(errorData.message || `HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                showAlert('Assessment created successfully!', 'success');
+                
+                // Redirect to assessments list after a short delay
+                setTimeout(() => {
+                    window.location.href = '/Assessments';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error creating assessment:', error);
+                showAlert('Failed to create assessment: ' + error.message, 'danger');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Set default open date to now
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('openDate').value = now.toISOString().slice(0, 16);
+        });
+    </script>
+}

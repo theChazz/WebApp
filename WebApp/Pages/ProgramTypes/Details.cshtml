@@ -1,0 +1,63 @@
+@page "{id:int}"
+@model WebApp.Pages.ProgramTypes.DetailsModel
+@{
+    ViewData["Title"] = "Program Type Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Program Type Details</h2>
+        <div>
+            <a href="/ProgramTypes/Edit/@Model.Id" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+            <a href="/ProgramTypes/Index" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>ID</strong></div>
+                <div class="col-md-9">@Model.Id</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Name</strong></div>
+                <div class="col-md-9" id="nameCell"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Description</strong></div>
+                <div class="col-md-9" id="descCell"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert" class="alert mt-3" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        const programTypeId = '@Model.Id';
+
+        async function loadDetails() {
+            try {
+                const res = await fetch(`${apiBaseUrl}/api/ProgramType/${programTypeId}`);
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+                document.getElementById('nameCell').textContent = data.name || '';
+                document.getElementById('descCell').textContent = data.description || '';
+            } catch (err) {
+                showAlert(err.message || 'Error', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} mt-3`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDetails);
+    </script>
+}

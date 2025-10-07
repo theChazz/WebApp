@@ -1,0 +1,90 @@
+@page
+@model WebApp.Pages.UserCredentials.CreateModel
+@{
+    ViewData["Title"] = "Create User Credential";
+}
+
+<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-8"><div class="card">
+<div class="card-header"><h4><i class="fas fa-plus"></i> Create Credential</h4></div>
+<div class="card-body">
+<form id="form">
+    <div class="mb-3">
+        <label class="form-label">User ID</label>
+        <input id="UserId" type="number" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Credential Type</label>
+        <input id="CredentialType" class="form-control" placeholder="e.g., Assessor, Moderator" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Registration Number</label>
+        <input id="RegistrationNumber" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Seta Body ID (optional)</label>
+        <input id="SetaBodyId" type="number" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Scope (optional)</label>
+        <textarea id="Scope" class="form-control"></textarea>
+    </div>
+    <div class="row">
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Valid From</label>
+            <input id="ValidFrom" type="date" class="form-control" required />
+        </div>
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Valid To</label>
+            <input id="ValidTo" type="date" class="form-control" required />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select id="Status" class="form-select">
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
+            <option value="PendingVerification">PendingVerification</option>
+            <option value="Revoked">Revoked</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Evidence URL</label>
+        <input id="EvidenceUrl" class="form-control" placeholder="https://..." />
+    </div>
+    <button class="btn btn-primary">Create</button>
+</form>
+<div id="alert" class="alert mt-3" style="display:none"></div>
+</div></div></div></div></div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        document.getElementById('form').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const payload = {
+                userId: parseInt(document.getElementById('UserId').value, 10),
+                credentialType: document.getElementById('CredentialType').value.trim(),
+                registrationNumber: document.getElementById('RegistrationNumber').value.trim(),
+                setaBodyId: parseInt(document.getElementById('SetaBodyId').value, 10) || null,
+                scope: document.getElementById('Scope').value.trim(),
+                validFrom: document.getElementById('ValidFrom').value,
+                validTo: document.getElementById('ValidTo').value,
+                    status: document.getElementById('Status').value,
+                    evidenceUrl: document.getElementById('EvidenceUrl').value.trim()
+            };
+
+            try{
+                const res = await fetch(`${apiBaseUrl}/api/UserCredential`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`Status ${res.status}: ${txt}`);
+                }
+                showAlert('Created','success');
+                setTimeout(()=>window.location.href='/UserCredentials/Index',700);
+            } catch(err) { showAlert(err.message || 'Error','danger'); }
+        });
+        function showAlert(m,t){ const a=document.getElementById('alert'); a.className=`alert alert-${t} mt-3`; a.textContent=m; a.style.display='block'; setTimeout(()=>a.style.display='none',4000); }
+    </script>
+}
